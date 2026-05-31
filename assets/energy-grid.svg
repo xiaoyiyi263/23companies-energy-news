@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 520" role="img" aria-label="能源网络背景">
+  <defs>
+    <linearGradient id="sky" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0b3447"/>
+      <stop offset="0.55" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#1d4e89"/>
+    </linearGradient>
+  </defs>
+  <rect width="1400" height="520" fill="url(#sky)"/>
+  <g fill="none" stroke="#e7fbff" stroke-opacity=".28" stroke-width="2">
+    <path d="M0 355c135-42 244-22 360 8s239 77 386 34 245-140 389-135 215 84 265 118"/>
+    <path d="M0 424c180-64 309-65 452-14s259 78 418 23 255-132 354-106 138 76 176 99"/>
+    <path d="M160 520 472 90 760 520M498 520 790 120l294 400"/>
+  </g>
+  <g fill="#e7fbff" fill-opacity=".68">
+    <circle cx="472" cy="90" r="6"/>
+    <circle cx="790" cy="120" r="6"/>
+    <circle cx="362" cy="363" r="5"/>
+    <circle cx="746" cy="397" r="5"/>
+    <circle cx="1135" cy="262" r="5"/>
+    <circle cx="1224" cy="327" r="5"/>
+  </g>
+</svg>

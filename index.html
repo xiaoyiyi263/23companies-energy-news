@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>能源企业重大新闻跟踪 | 2026</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <div>
+          <p class="eyebrow">2026 年度跟踪</p>
+          <h1>国内外能源企业重大新闻</h1>
+          <p class="subtitle">按公司归档，按时间排序，官网来源优先；官网不足时补充权威媒体并标注来源类型。</p>
+        </div>
+        <div class="summary-panel" aria-label="更新概览">
+          <span id="last-updated">更新中</span>
+          <strong id="event-count">0</strong>
+          <span>条已录入事件</span>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="toolbar" aria-label="筛选">
+        <label>
+          公司
+          <select id="company-filter"></select>
+        </label>
+        <label>
+          地区
+          <select id="region-filter">
+            <option value="all">全部</option>
+            <option value="海外">海外</option>
+            <option value="中国">中国</option>
+          </select>
+        </label>
+        <label>
+          季度
+          <select id="quarter-filter">
+            <option value="all">全部</option>
+            <option value="Q1">一季度</option>
+            <option value="Q2">二季度</option>
+            <option value="Q3">三季度</option>
+            <option value="Q4">四季度</option>
+          </select>
+        </label>
+        <label class="search-label">
+          检索
+          <input id="search-input" type="search" placeholder="关键词、业务、来源" />
+        </label>
+      </section>
+
+      <section class="metrics" aria-label="覆盖情况">
+        <div>
+          <span>公司数量</span>
+          <strong id="company-count">23</strong>
+        </div>
+        <div>
+          <span>官网来源占比</span>
+          <strong id="official-ratio">0%</strong>
+        </div>
+        <div>
+          <span>本季度缺口</span>
+          <strong id="coverage-gap">0</strong>
+        </div>
+      </section>
+
+      <section id="trend-overview" class="trend-overview" aria-label="季度发展趋势"></section>
+
+      <section id="company-list" class="company-list" aria-live="polite"></section>
+    </main>
+
+    <footer>
+      <p>采集起点：2026-01-01。每家公司每季度目标不少于 5 条重大事件；官网不足时使用新华社、国资委、交易所公告、主流财经媒体等补充。</p>
+    </footer>
+
+    <script src="data/news-data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
