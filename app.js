@@ -65,7 +65,7 @@ function eventMatches(event, company) {
     company.shortName,
     event.title,
     event.summary,
-    event.details,
+    Array.isArray(event.details) ? event.details.map((item) => `${item.label} ${item.text}`).join(" ") : event.details,
     event.significance,
     event.sourceName,
     event.tags.join(" "),
@@ -89,6 +89,11 @@ function renderSources(company) {
 
 function renderEvent(event) {
   const sourceClass = event.sourceType === "官网" ? "official" : "authority";
+  const detailHtml = Array.isArray(event.details)
+    ? event.details
+        .map((item) => `<p><strong>${escapeHtml(item.label)}：</strong>${escapeHtml(item.text)}</p>`)
+        .join("")
+    : `<p><strong>具体信息：</strong>${escapeHtml(event.details || event.summary)}</p>`;
   return `
     <article class="event">
       <time class="event-date" datetime="${event.date}">${formatDate(event.date)}</time>
@@ -100,8 +105,7 @@ function renderEvent(event) {
         <h3>${escapeHtml(event.title)}</h3>
         <div class="event-sections">
           <p><strong>事件概述：</strong>${escapeHtml(event.summary)}</p>
-          <p><strong>具体信息：</strong>${escapeHtml(event.details || event.summary)}</p>
-          <p><strong>跟踪价值：</strong>${escapeHtml(event.significance)}</p>
+          ${detailHtml}
         </div>
         <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
       </div>

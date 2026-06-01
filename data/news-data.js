@@ -386,13 +386,47 @@
 
   const companyById = Object.fromEntries(companies.map((company) => [company.id, company]));
 
+  function extractMetrics(text) {
+    const matches = text.match(/(?:约|超过|达到|最高|至少|合计|总规模|新增|累计)?\d+(?:\.\d+)?\s?(?:GW|MW|MWh|GWh|TWh|MWp|kV|公里|千瓦|万千瓦|亿千瓦时|万吨|亿欧元|亿美元|亿雷亚尔|雷亚尔|欧元|美元|年|户|%)/g) || [];
+    return [...new Set(matches.map((item) => item.trim()))].slice(0, 6);
+  }
+
+  function inferStage(text) {
+    if (/投运|商业运行|全容量并网|并网|投入商业运营/.test(text)) return "项目已进入投运或并网阶段，后续重点是稳定运行、利用小时和对区域电力供应的实际贡献。";
+    if (/完成|达成|签署|获得|中标|锁定|取得/.test(text)) return "事项已形成明确合同、权益或合作安排，后续重点是审批、建设、交付和商业化兑现。";
+    if (/建设|推进|扩建|改造|施工|安装/.test(text)) return "事项处于工程建设或改造推进阶段，后续重点是关键节点、设备交付、并网送出和工期控制。";
+    if (/试点|示范|技术|智能|数字|AI|氢|氨/.test(text)) return "事项属于技术示范或数字化应用，后续重点是从试点走向规模化复制的条件和效果。";
+    if (/保供|迎峰|防汛|检修|安全/.test(text)) return "事项属于运行保障和安全生产安排，后续重点是高峰负荷、防汛期或极端天气下的实际保障效果。";
+    return "事项仍需跟踪后续实施节点，重点看是否形成项目开工、投产并网、稳定运行或可复制应用。";
+  }
+
   function makeDetails(event) {
     const company = companyById[event.companyId];
     const sourceNote = event.sourceType === "官网"
-      ? "本条采用公司官网或官方投资者关系材料作为出处。"
+      ? "来源为公司官网或官方发布渠道。"
       : "本条因官网直接信息不足，采用权威媒体、交易所公告或监管披露补充。";
-    const topics = event.tags.join("、");
-    return `${company.shortName}在${event.date}披露或被权威渠道报道该事项，核心内容是：${event.summary} 具体看，事件涉及${topics}等方面，需重点关注项目位置、建设节点、装机规模、技术路线、并网进度、保供作用以及对公司主责主业的影响。${sourceNote}`;
+    const metrics = extractMetrics(`${event.title}。${event.summary}。${event.significance}`);
+    const metricText = metrics.length
+      ? `已披露的硬信息包括：${metrics.join("、")}。这些数字用于判断项目体量、建设强度或保供贡献。`
+      : "公开材料未披露完整量化指标，当前可确认的信息主要是业务方向、项目类型和推进阶段。后续月更需要继续补充装机规模、投资额、并网时间、投运节点等硬信息。";
+    return [
+      {
+        label: "项目/事项",
+        text: `${company.shortName}本条主业动作是：${event.summary}`,
+      },
+      {
+        label: "关键要素",
+        text: `${metricText}涉及领域为${event.tags.join("、")}。`,
+      },
+      {
+        label: "进展节点",
+        text: inferStage(`${event.title}。${event.summary}`),
+      },
+      {
+        label: "主业影响",
+        text: `${event.significance}${sourceNote}`,
+      },
+    ];
   }
 
   const quarterTrends = {
