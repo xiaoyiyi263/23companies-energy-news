@@ -41,7 +41,7 @@
 
     ["enel","2026-02-05","Enel公布2025年初步业绩，普通EBITDA达229亿欧元","Enel披露2025年收入约804亿欧元、普通EBITDA约229亿欧元，国际业务贡献抵消意大利零售和水电压力。","初步业绩为后续战略计划提供财务基础，显示其资产组合调整后盈利韧性增强。","官网","Enel Press Release","https://www.enel.com/media/explore/search-press-releases/press/2026/02/enel-preliminary-results-2025-ordinary-ebitda-at-229-billion-euros-increasing-thanks-to-international-activities",["财报","国际业务","经营"]],
     ["enel","2026-02-22","Enel启动最高10亿欧元股份回购计划","Enel董事会批准新一轮回购，最高支出10亿欧元、最多1.5亿股，作为股息之外的股东回报安排。","回购体现公司降债和重组后的资本回报能力，也与其提升每股收益目标相配合。","官网","Enel Press Release","https://www.enel.com/media/explore/search-press-releases/press/2026/02/enel-launches-a-new-share-buyback-program-of-up-to-1-billion-euros-",["股东回报","回购","资本市场"]],
-    ["enel","2026-02-23","Enel发布2026-2028战略计划，三年投资530亿欧元","Enel计划2026-2028年总投资约530亿欧元，重点投向电网、可再生能源和终端客户，其中可再生能源投资约200亿欧元。","战略计划把增长重心放在稳定市场和高电力需求地区，是判断Enel未来三年业务重构的关键文件。","官网","Enel Strategic Plan","https://www.enel.com/media/explore/search-press-releases/press/2026/02/enel-2026-2028-strategic-plan",["战略","投资","电网"]],
+    ["enel","2026-02-23","Enel发布2026-2028战略计划，三年投资530亿欧元","Enel制定2026-2028战略计划，计划投资530亿欧元，较2023-2025年计划增加100亿欧元，重点聚焦高潜力地区业务增长；其中综合业务投资超过260亿欧元，约200亿欧元用于可再生能源，较上一轮计划增加约80亿欧元，用以新增约15GW可再生能源容量，另有超过260亿欧元投入电网建设，其中约55%用于意大利本土，其余分布在伊比利亚半岛和拉丁美洲。","该战略计划显示Enel未来三年将以电网和可再生能源作为主业扩张核心，通过在高潜力区域精准投资提升清洁能源装机、电网韧性和长期经营能力。","官网","Enel Strategic Plan","https://www.enel.com/media/explore/search-press-releases/press/2026/02/enel-2026-2028-strategic-plan",["战略","投资","电网"]],
     ["enel","2026-02-23","Enel举行2026资本市场日","Enel在资本市场日向投资者和媒体介绍2026-2028战略计划，CEO和CFO阐释增长、资本纪律和股东回报目标。","资本市场日强化了管理层对投资节奏和收益增长的承诺，是外部评估其执行能力的重要窗口。","官网","Enel News","https://www.enel.com/media/explore/search-news/news/2026/02/capital-markets-day-2026",["资本市场日","战略沟通","投资者关系"]],
     ["enel","2026-03-19","Enel发布2025年正式业绩","Enel公布2025年收入803.46亿欧元、普通EBITDA 228.74亿欧元、集团普通净利润70.11亿欧元，净利润同比增长。","正式业绩验证了其去杠杆、资产组合优化和国际业务贡献，是年度报告的核心经营依据。","官网","Enel FY2025 Results","https://www.enel.com/media/explore/search-press-releases/press/2026/03/enel-2025-results-which-increased-thanks-to-international-activities-consolidate-the-rationalization-and-strengthening-process-of-its-business-portfolio-and-financial-structure",["财报","利润","资产组合"]],
 
@@ -388,10 +388,20 @@
 
   function extractMetrics(text) {
     const matches = text.match(/(?:约|超过|达到|最高|至少|合计|总规模|新增|累计)?\d+(?:\.\d+)?\s?(?:GW|MW|MWh|GWh|TWh|MWp|kV|公里|千瓦|万千瓦|亿千瓦时|万吨|亿欧元|亿美元|亿雷亚尔|雷亚尔|欧元|美元|年|户|%)/g) || [];
-    return [...new Set(matches.map((item) => item.trim()))].slice(0, 6);
+    const seen = new Set();
+    return matches
+      .map((item) => item.trim())
+      .filter((item) => {
+        const key = item.replace(/^(约|超过|达到|最高|至少|合计|总规模|新增|累计)/, "").replace(/\s+/g, "");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 6);
   }
 
   function inferStage(text) {
+    if (/战略计划|投资计划|规划/.test(text)) return "该计划已经明确投资方向和资金分配，后续重点是具体项目落地、资本开支执行、装机新增和电网建设进度。";
     if (/投运|商业运行|全容量并网|并网|投入商业运营/.test(text)) return "项目已进入投运或并网阶段，后续重点是稳定运行、利用小时和对区域电力供应的实际贡献。";
     if (/完成|达成|签署|获得|中标|锁定|取得/.test(text)) return "事项已形成明确合同、权益或合作安排，后续重点是审批、建设、交付和商业化兑现。";
     if (/建设|推进|扩建|改造|施工|安装/.test(text)) return "事项处于工程建设或改造推进阶段，后续重点是关键节点、设备交付、并网送出和工期控制。";
@@ -407,26 +417,11 @@
       : "本条因官网直接信息不足，采用权威媒体、交易所公告或监管披露补充。";
     const metrics = extractMetrics(`${event.title}。${event.summary}。${event.significance}`);
     const metricText = metrics.length
-      ? `已披露的硬信息包括：${metrics.join("、")}。这些数字用于判断项目体量、建设强度或保供贡献。`
-      : "公开材料未披露完整量化指标，当前可确认的信息主要是业务方向、项目类型和推进阶段。后续月更需要继续补充装机规模、投资额、并网时间、投运节点等硬信息。";
-    return [
-      {
-        label: "项目/事项",
-        text: `${company.shortName}本条主业动作是：${event.summary}`,
-      },
-      {
-        label: "关键要素",
-        text: `${metricText}涉及领域为${event.tags.join("、")}。`,
-      },
-      {
-        label: "进展节点",
-        text: inferStage(`${event.title}。${event.summary}`),
-      },
-      {
-        label: "主业影响",
-        text: `${event.significance}${sourceNote}`,
-      },
-    ];
+      ? `其中，关键规模和节点包括${metrics.join("、")}。`
+      : "";
+    const publishVerb = event.sourceType === "官网" ? "发布" : "经权威渠道披露";
+    const cleanTitle = event.title.replace(new RegExp(`^${company.shortName}`), "").replace(/^发布/, "").replace(/^，/, "");
+    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${inferStage(`${event.title}。${event.summary}`)}${event.significance}${sourceNote}`;
   }
 
   const quarterTrends = {
