@@ -437,6 +437,48 @@
     return contexts.slice(0, 2).join("");
   }
 
+  function buildFollowUpContext(event) {
+    const text = event.tags.join("、") + event.title;
+    if (/电网|输电|配电|送出|变电/.test(text)) return "后续需要重点观察线路、变电站或自动化设备是否形成实质投运，以及能否缓解新能源接入和高峰负荷下的网架约束。";
+    if (/储能|电池|抽水蓄能|调峰|灵活/.test(text)) return "后续需要重点观察储能容量是否按期并网、能否参与调频和容量市场，以及对新能源消纳和峰谷调节的实际贡献。";
+    if (/核电|华龙一号|Hinkley|Vogtle|Crane/.test(text)) return "后续需要重点观察核电工程关键节点、大修周期、许可审批和机组可用率变化，这些指标会直接影响低碳基荷供给能力。";
+    if (/海上风电|风电|光伏|新能源|可再生能源|PPA|绿电/.test(text)) return "后续需要重点观察项目是否完成核准、开工、并网和送出配套，长期售电合同能否转化为稳定收入和有效发电量。";
+    if (/保供|迎峰|防汛|检修|安全|煤炭|火电|燃料/.test(text)) return "后续需要重点观察迎峰度夏期间机组可用率、燃料库存、设备缺陷处理和应急调度效果。";
+    if (/数字|智能|AI|智慧|客户服务|需求响应|综合能源/.test(text)) return "后续需要重点观察该类数字化或客户侧服务是否从试点走向规模化应用，并形成可量化的降本、增效或负荷响应效果。";
+    if (/LNG|氢|氨|低碳燃料|供应链/.test(text)) return "后续需要重点观察燃料供应合同、接收能力、替代燃料应用和发电侧改造能否降低价格波动和供应中断风险。";
+    return "后续需要结合项目节点、运行数据和公司官网后续披露，继续确认该事项是否形成实际工程进展和主业贡献。";
+  }
+
+  const companyCoreRoles = {
+    "rwe": "RWE二季度主线是海上风电、储能聚合和企业绿电供应，重点看新能源资产如何与工业客户、虚拟电厂和电力交易能力结合。",
+    "enel": "Enel二季度主线是电网扩容、储能并网和长期绿电供应，重点看其三年战略能否落实到配电网韧性、可再生能源新增和客户侧合同。",
+    "iberdrola": "Iberdrola二季度主线是电网优先和长期售电，重点看英国海上风电、美国输配电网络和意大利工商客户绿电合同的执行。",
+    "edf": "EDF二季度主线是核电产业链、既有机组大修延寿和低碳电力供给，重点看法国本土制造、英国核电工程和AI基础设施电力需求的协同。",
+    "engie": "ENGIE二季度主线是储能、电网资产和客户侧低碳服务，重点看欧洲电池储能、英国电网收购后续和企业PPA服务的落地。",
+    "duke-energy": "Duke Energy二季度主线是电网可靠性、风暴韧性、太阳能储能和客户侧资源，重点看高峰负荷和极端天气下的供电保障。",
+    "southern-company": "Southern Company二季度主线是美国东南部大负荷增长下的核电、输电和电厂升级，重点看数据中心需求如何拉动支撑性电源和电网投资。",
+    "constellation": "Constellation二季度主线是Calpine发电资产整合、核电延寿重启和数据中心供电，重点看可调度电源如何匹配AI等新增负荷。",
+    "axia": "AXIA二季度主线是巴西输电扩建、水电容量资源和绿色电力商业化，重点看其更名后能否把可再生资产和输电网络转化为稳定收益。",
+    "jera": "JERA二季度主线是LNG组合优化、电池技术和低碳燃料供应链，重点看日本电力企业如何同时保障燃料安全和推进火电低碳化。",
+    "kepco": "KEPCO二季度主线是输电网扩容、电力ICT、海外清洁能源和核电合作，重点看韩国电力技术输出与本土电网升级的结合。",
+    "ntpc": "NTPC二季度主线是大型光伏基地、火电保供、绿色氢能和储能示范，重点看印度电力需求增长下火电与新能源如何并行。",
+    "datang": "中国大唐二季度主线是迎峰度夏、煤电灵活性改造、风光储一体化和智慧电厂，重点看保供机组和新能源项目执行。",
+    "huadian": "中国华电二季度主线是新能源基地、储能、海上风电和煤电灵活性改造，重点看电力主业稳定运行和低碳转型协同。",
+    "spic": "国家电投二季度主线是核电、新能源基地、储能、氢能和构网技术，重点看清洁能源规模优势如何转化为新型电力系统能力。",
+    "chn-energy": "国家能源集团二季度主线是煤炭电力一体化保供、新能源基地、数智化和迎峰度夏，重点看煤电煤炭协同和绿色转型并行。",
+    "ctg": "三峡集团二季度主线是梯级水电防汛调度、清洁能源走廊、新能源和长江保护，重点看水电基本盘如何支撑清洁能源体系。",
+    "cgn": "中广核二季度主线是核电安全运行、华龙一号工程和共享储能，重点看核电基荷与新型储能、综合能源业务的衔接。",
+    "cr-power": "华润电力二季度主线是新能源基地、海上风电、配套储能和火电灵活性，重点看风光项目扩张和支撑性电源管理。",
+    "geg": "广东能源集团二季度主线是省重点项目、博贺电厂稳定运行、海上风电和迎峰度夏，重点看广东高负荷地区电源支撑。",
+    "zj-energy": "浙能集团二季度主线是浙江能源保供、新能源、智慧电厂和AI运维，重点看省属能源企业如何服务地方新型能源体系。",
+    "beijing-energy": "京能集团二季度主线是首都供热季后检修、迎峰度夏、能源保供和新能源项目，重点看民生保供和绿色转型并行。",
+    "sdic-power": "国投电力二季度主线是雅砻江水电、水风光互补、新能源并网和防汛检修，重点看水电基本盘和新能源送出能力。",
+  };
+
+  function quarterOf(dateValue) {
+    return `Q${Math.ceil(Number(dateValue.slice(5, 7)) / 3)}`;
+  }
+
   function makeDetails(event) {
     const company = companyById[event.companyId];
     const sourceNote = event.sourceType === "官网"
@@ -450,7 +492,10 @@
     const cleanTitle = event.title.replace(new RegExp(`^${company.shortName}`), "").replace(/^发布/, "").replace(/^，/, "");
     const stageText = inferStage(`${event.title}。${event.summary}`);
     const usefulStage = /事项仍需/.test(stageText) ? "" : stageText;
-    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${buildBusinessContext(event)}${usefulStage}${event.significance}`;
+    const isQ2 = quarterOf(event.date) === "Q2";
+    const quarterContext = isQ2 ? `放在二季度跟踪口径下，${companyCoreRoles[event.companyId] || "该事项需要结合公司主责主业和本季度项目执行情况观察"}` : "";
+    const followUpContext = isQ2 ? buildFollowUpContext(event) : "";
+    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${buildBusinessContext(event)}${usefulStage}${quarterContext}${followUpContext}${event.significance}`;
   }
 
   const quarterTrends = {
