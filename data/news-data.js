@@ -387,7 +387,7 @@
   const companyById = Object.fromEntries(companies.map((company) => [company.id, company]));
 
   function extractMetrics(text) {
-    const matches = text.match(/(?:约|超过|达到|最高|至少|合计|总规模|新增|累计)?\d+(?:\.\d+)?\s?(?:GW|MW|MWh|GWh|TWh|MWp|kV|公里|千瓦|万千瓦|亿千瓦时|万吨|亿欧元|亿美元|亿雷亚尔|雷亚尔|欧元|美元|年|户|%)/g) || [];
+    const matches = text.match(/(?:约|超过|达到|最高|至少|合计|总规模|新增|累计)?\d+(?:\.\d+)?\s?(?:亿千瓦时|MWp|MWh|GWh|TWh|GW|MW|kV|万千瓦|千瓦|公里|万吨|亿欧元|亿美元|亿雷亚尔|雷亚尔|欧元|美元|年|户|%)/g) || [];
     const seen = new Set();
     return matches
       .map((item) => item.trim())
@@ -410,6 +410,33 @@
     return "事项仍需跟踪后续实施节点，重点看是否形成项目开工、投产并网、稳定运行或可复制应用。";
   }
 
+  function buildBusinessContext(event) {
+    const tags = event.tags.join("、");
+    const contexts = [];
+    if (/电网|输电|配电|送出|变电/.test(tags + event.title)) {
+      contexts.push("从业务内容看，该事项主要指向输配电线路、变电站、自动化调度或电网韧性建设，核心作用是提升新能源接入、大负荷承载和极端天气下的供电可靠性。");
+    }
+    if (/储能|电池|抽水蓄能|调峰|灵活/.test(tags + event.title)) {
+      contexts.push("从系统作用看，储能和灵活性资源可用于调频、削峰、容量支撑和新能源出力平滑，决定风光项目能否从单纯装机转化为稳定可交付电量。");
+    }
+    if (/核电|华龙一号|Hinkley|Vogtle|Crane/.test(tags + event.title)) {
+      contexts.push("从电源结构看，核电项目主要提供低碳基荷和可预期电量，工程建设、大修延寿或重启进展会直接影响中长期稳定电力供应能力。");
+    }
+    if (/海上风电|风电|光伏|新能源|可再生能源|PPA|绿电/.test(tags + event.title)) {
+      contexts.push("从新能源开发看，关注重点包括资源获取、工程建设、并网送出、长期售电合同和客户侧消纳，项目价值取决于能否形成稳定发电量和长期现金流。");
+    }
+    if (/保供|迎峰|防汛|检修|安全|煤炭|火电|燃料/.test(tags + event.title)) {
+      contexts.push("从运行保障看，该事项通常涉及燃料库存、机组检修、设备消缺、汛期调度或高峰负荷应对，是判断企业能源保供能力和安全生产水平的重要依据。");
+    }
+    if (/数字|智能|AI|智慧|客户服务|需求响应|综合能源/.test(tags + event.title)) {
+      contexts.push("从业务模式看，数字化和客户侧能源服务正在把发电、电网、储能和负荷管理连接起来，重点在于提升运行效率、需求响应能力和低碳服务收入。");
+    }
+    if (/LNG|氢|氨|低碳燃料|供应链/.test(tags + event.title)) {
+      contexts.push("从燃料和供应链看，该事项关系燃料采购、运输、接收、替代燃料应用或低碳化改造，核心是降低能源供应不确定性并提升发电组合韧性。");
+    }
+    return contexts.slice(0, 2).join("");
+  }
+
   function makeDetails(event) {
     const company = companyById[event.companyId];
     const sourceNote = event.sourceType === "官网"
@@ -421,7 +448,9 @@
       : "";
     const publishVerb = event.sourceType === "官网" ? "发布" : "经权威渠道披露";
     const cleanTitle = event.title.replace(new RegExp(`^${company.shortName}`), "").replace(/^发布/, "").replace(/^，/, "");
-    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${inferStage(`${event.title}。${event.summary}`)}${event.significance}${sourceNote}`;
+    const stageText = inferStage(`${event.title}。${event.summary}`);
+    const usefulStage = /事项仍需/.test(stageText) ? "" : stageText;
+    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${buildBusinessContext(event)}${usefulStage}${event.significance}`;
   }
 
   const quarterTrends = {
