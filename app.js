@@ -3,7 +3,7 @@ const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {
 const state = {
   company: "all",
   region: "all",
-  quarter: "Q1",
+  quarter: "Q2",
   search: "",
 };
 

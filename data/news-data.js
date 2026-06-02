@@ -535,7 +535,7 @@
   window.ENERGY_NEWS_DATA = {
     meta: {
       startDate: "2026-01-01",
-      lastUpdated: "2026-05-31",
+      lastUpdated: "2026-06-02",
       quarterlyTarget: 5,
     },
     companies,
