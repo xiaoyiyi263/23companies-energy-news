@@ -99,7 +99,7 @@ function renderEvent(event) {
         </div>
         <h3>${escapeHtml(event.title)}</h3>
         <div class="event-sections">
-          <p><strong>具体信息：</strong>${escapeHtml(event.details || event.summary)}</p>
+          <p><strong>新闻内容：</strong>${escapeHtml(event.details || event.summary)}</p>
         </div>
         <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
       </div>

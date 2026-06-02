@@ -481,21 +481,9 @@
 
   function makeDetails(event) {
     const company = companyById[event.companyId];
-    const sourceNote = event.sourceType === "官网"
-      ? "来源为公司官网或官方发布渠道。"
-      : "本条因官网直接信息不足，采用权威媒体、交易所公告或监管披露补充。";
-    const metrics = extractMetrics(`${event.title}。${event.summary}。${event.significance}`);
-    const metricText = metrics.length
-      ? `其中，关键规模和节点包括${metrics.join("、")}。`
-      : "";
     const publishVerb = event.sourceType === "官网" ? "发布" : "经权威渠道披露";
     const cleanTitle = event.title.replace(new RegExp(`^${company.shortName}`), "").replace(/^发布/, "").replace(/^，/, "");
-    const stageText = inferStage(`${event.title}。${event.summary}`);
-    const usefulStage = /事项仍需/.test(stageText) ? "" : stageText;
-    const isQ2 = quarterOf(event.date) === "Q2";
-    const quarterContext = isQ2 ? `放在二季度跟踪口径下，${companyCoreRoles[event.companyId] || "该事项需要结合公司主责主业和本季度项目执行情况观察"}` : "";
-    const followUpContext = isQ2 ? buildFollowUpContext(event) : "";
-    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}${metricText}${buildBusinessContext(event)}${usefulStage}${quarterContext}${followUpContext}${event.significance}`;
+    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}`;
   }
 
   const quarterTrends = {
