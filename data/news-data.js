@@ -450,6 +450,46 @@
     return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}`;
   }
 
+  function polishOverseasText(text) {
+    if (!text) return text;
+    return text
+      .replace(/普通EBITDA/g, "经常性EBITDA")
+      .replace(/普通净利润/g, "经常性净利润")
+      .replace(/开放市场客户/g, "市场化零售客户")
+      .replace(/表后电池储能系统/g, "用户侧电池储能系统")
+      .replace(/能源灵活性容量/g, "用能调节能力")
+      .replace(/灵活性资源/g, "调节资源")
+      .replace(/电力灵活性市场/g, "电力调节市场")
+      .replace(/电力市场灵活性服务/g, "电力市场调节服务")
+      .replace(/可交付能力/g, "稳定供电能力")
+      .replace(/具体加快电气化相关行动/g, "加快客户用能和交通场景电气化")
+      .replace(/高强度节能综合对策/g, "强化节能综合措施")
+      .replace(/完岛换流站/g, "莞岛换流站")
+      .replace(/背后交流系统连接工程/g, "配套交流系统连接工程")
+      .replace(/可交付电量/g, "稳定供电量")
+      .replace(/该条记录的是/g, "这项内容主要说明")
+      .replace(/该条记录/g, "这项内容记录")
+      .replace(/该条属于/g, "此事项属于")
+      .replace(/该条只保留/g, "此处只保留")
+      .replace(/该事项说明/g, "这项内容说明")
+      .replace(/该项目的重点是/g, "项目重点在于")
+      .replace(/服务大型企业客户清洁电力需求/g, "满足大型企业客户的清洁用电需求")
+      .replace(/服务电力系统峰值管理/g, "用于缓解巴西电力系统峰值负荷压力")
+      .replace(/服务巴西电力系统峰值管理/g, "用于缓解巴西电力系统峰值负荷压力")
+      .replace(/服务岛屿电力系统清洁化/g, "推动岛屿电力系统清洁化")
+      .replace(/服务RWE在欧洲发电和能源贸易组合中的燃气供应安全/g, "为RWE欧洲发电和能源贸易组合补充长期燃气供应")
+      .replace(/服务数据中心和工业客户/g, "满足数据中心和工业客户用电需求")
+      .replace(/服务AI和云计算用电需求/g, "满足AI和云计算用电需求")
+      .replace(/服务负荷增长、极端天气应对和新能源接入/g, "用于应对负荷增长、极端天气和新能源接入压力")
+      .replace(/服务法国未来/g, "面向法国未来")
+      .replace(/服务可再生能源接入和区域电力输送/g, "支撑可再生能源接入和区域电力输送")
+      .replace(/服务可再生能源接入和电力系统灵活调节/g, "支撑可再生能源接入和电力系统调节")
+      .replace(/服务电力系统稳定运行/g, "支撑电力系统稳定运行")
+      .replace(/服务英国工业和数据中心等新增负荷/g, "满足英国工业和数据中心等新增负荷需求")
+      .replace(/服务大客户脱碳的重要指标/g, "衡量其支持大客户脱碳的重要指标")
+      .replace(/服务印度大发电企业推动电站运维能力提升的平台活动/g, "体现NTPC推动印度发电行业提升电站运维能力的平台作用");
+  }
+
   const q1SummaryRewrites = {
     "rwe|2026-01-14|RWE在英国海上风电竞价中锁定6.9GW差价合约并引入KKR": "RWE在英国第七轮可再生能源差价合约竞价中锁定约6.9GW海上风电容量，涉及Norfolk Vanguard、Dogger Bank South和Awel y Mor等项目。同时，公司与KKR就Norfolk Vanguard建立长期合作安排，引入外部资本共同推进项目开发。该事项把竞价合同、电价锁定和股权合作同步落地，为英国海上风电项目后续融资、建设和供应链采购提供基础。",
     "rwe|2026-01-15|RWE与Glenfarne签署20年美国LNG供应协议": "RWE Supply & Trading与Glenfarne签署20年液化天然气供应协议，货源来自美国项目，预计自2030年起开始交付，可运往欧洲及全球市场。协议内容属于长期燃料采购安排，服务RWE在欧洲发电和能源贸易组合中的燃气供应安全。该合同说明RWE在扩大风电、光伏和储能的同时，仍在锁定过渡期天然气资源。",
@@ -714,13 +754,17 @@
     quarterTrends,
     companyQuarterSummaries,
     events: rows.concat(q2Rows, coreSupplementRows).filter((row) => !excludedTopicPattern.test([row[2], ...(row[8] || [])].join(" "))).map(([companyId, date, title, summary, significance, sourceType, sourceName, url, tags]) => {
+      const company = companyById[companyId];
       const rewrittenSummary = q1SummaryRewrites[`${companyId}|${date}|${title}`] || summary;
+      const displayTitle = company.region === "海外" ? polishOverseasText(title) : title;
+      const displaySummary = company.region === "海外" ? polishOverseasText(rewrittenSummary) : rewrittenSummary;
+      const displaySignificance = company.region === "海外" ? polishOverseasText(significance) : significance;
       const event = {
         companyId,
         date,
-        title,
-        summary: rewrittenSummary,
-        significance,
+        title: displayTitle,
+        summary: displaySummary,
+        significance: displaySignificance,
         sourceType,
         sourceName,
         url,
