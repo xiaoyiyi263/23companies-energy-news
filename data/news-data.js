@@ -447,7 +447,48 @@
     const company = companyById[event.companyId];
     const publishVerb = event.sourceType === "官网" ? "发布" : "经权威渠道披露";
     const cleanTitle = event.title.replace(new RegExp(`^${company.shortName}`), "").replace(/^发布/, "").replace(/^，/, "");
-    return `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}`;
+    const base = `${event.date.slice(5, 7).replace(/^0/, "")}月${event.date.slice(8, 10).replace(/^0/, "")}日，${company.shortName}${publishVerb}“${cleanTitle}”。${event.summary}`;
+    if (company.region !== "中国" || base.length >= 180) return base;
+    const addition = buildDomesticDetailAddition(event);
+    return addition ? `${base}${addition}` : base;
+  }
+
+  function buildDomesticDetailAddition(event) {
+    const text = [event.title, event.summary, event.tags.join("、")].join(" ");
+    if (/会议|会谈|职代会|大会|新闻发布会|通气会|综述|工作会议|经济活动分析/.test(event.title)) {
+      return "";
+    }
+    if (/投资|出资|合资|债券|资金|融资/.test(text)) {
+      return "正文重点不是融资或资本动作本身，而是资金投向对应的新能源基地、支撑性电源、储能、能源科技或绿色低碳改造项目。";
+    }
+    if (/数字|智能|AI|智慧|大模型|数智|创新工作室|科技创新/.test(text)) {
+      return "正文重点在数据采集、设备状态识别、故障预警、运行优化和检修管理，目标是把数字化工具直接用于发电生产、运维检修和安全管控。";
+    }
+    if (/水电|雅砻江|长江|梯级|北斗|径流|枢纽|大坝/.test(text)) {
+      return "正文重点在梯级电站调度、水情预测、枢纽监测和设备安全运行；这类工作直接关系大型清洁能源基地的发电效率、防洪调度和长期安全。";
+    }
+    if (/核电|华龙一号|反应堆|装料/.test(text)) {
+      return "正文重点在核岛土建、设备安装、冷试热试、装料准备、并网试验和监管审评等工程环节；这些节点决定机组何时从建设调试转入稳定发电。";
+    }
+    if (/储能|调峰|灵活性|共享储能/.test(text)) {
+      return "正文重点在储能容量、接入位置、充放电调度和并网验收；这类项目主要用于平滑风光出力、参与削峰填谷，并提高新能源消纳能力。";
+    }
+    if (/630℃|二次再热|超超临界|煤电|火电|电厂|机组/.test(text)) {
+      return "正文重点在机组参数、投产节点和支撑性电源作用：项目从建设调试转入发电运行后，可在高峰负荷、新能源波动和供热需求下提供稳定出力。";
+    }
+    if (/海上风电/.test(text)) {
+      return "正文重点在风机基础、海缆敷设、海上升压站、施工窗口和送出工程等环节；这些节点决定项目能否从资源开发进入并网发电。";
+    }
+    if (/风电|光伏|新能源|绿电|清洁能源|风光/.test(text)) {
+      return "正文重点在资源获取、核准备案、工程施工、送出工程和并网验收；只有送出和消纳条件落实后，新增装机才会转化为有效发电量。";
+    }
+    if (/综合能源|客户侧|供热|热泵|园区|售电|建筑节能/.test(text)) {
+      return "正文重点在分布式光伏、储能、冷热电联供、能效管理和绿电交易等组合服务，落点是园区、公共建筑或大客户用能场景。";
+    }
+    if (/煤炭|铁路|港口|运输|燃料|煤源/.test(text)) {
+      return "正文重点在煤源组织、铁路港口通道、电厂燃料衔接和电源可用能力，反映煤电运输一体化企业对能源供应链的统筹。";
+    }
+    return "";
   }
 
   function polishOverseasText(text) {
@@ -747,7 +788,7 @@
   window.ENERGY_NEWS_DATA = {
     meta: {
       startDate: "2026-01-01",
-      lastUpdated: "2026-06-10",
+      lastUpdated: "2026-06-11",
       quarterlyTarget: 5,
     },
     companies,
