@@ -313,11 +313,13 @@
 
       themes.forEach((theme) => {
         scenarios.forEach((scenario) => {
+          // 能源类型→应用场景
           const key = `${theme.key}|${scenario.key}`;
           themeScenarioLinks[key] = (themeScenarioLinks[key] || 0) + 1;
+          // 应用场景→企业
+          const sKey = `${scenario.key}|${company.shortName}`;
+          scenarioCompanyLinks[sKey] = (scenarioCompanyLinks[sKey] || 0) + 1;
         });
-        const sKey = `${scenario.key || "其他"}|${company.shortName}`;
-        scenarioCompanyLinks[sKey] = (scenarioCompanyLinks[sKey] || 0) + 1;
       });
     });
 
