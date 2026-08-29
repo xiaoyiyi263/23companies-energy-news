@@ -19,27 +19,27 @@
     { key: "绿电交易", keywords: ["绿电", "PPA", "购电协议", "电力交易", "renewable PPA", "power purchase"] },
   ];
 
-  // 地理区域坐标（简化的经纬度，用于地图绘制）
+  // 地理区域坐标（真实经纬度 [lon, lat]，用于Leaflet地图）
   const REGION_COORDS = {
-    "中国": { x: 0.78, y: 0.35 },
-    "德国": { x: 0.48, y: 0.30 },
-    "法国": { x: 0.45, y: 0.32 },
-    "意大利": { x: 0.48, y: 0.36 },
-    "西班牙": { x: 0.42, y: 0.36 },
-    "美国": { x: 0.20, y: 0.35 },
-    "巴西": { x: 0.30, y: 0.65 },
-    "日本": { x: 0.82, y: 0.35 },
-    "韩国": { x: 0.80, y: 0.34 },
-    "印度": { x: 0.70, y: 0.42 },
-    "英国": { x: 0.44, y: 0.28 },
-    "阿布扎比": { x: 0.58, y: 0.42 },
-    "中东": { x: 0.58, y: 0.42 },
-    "欧洲": { x: 0.47, y: 0.32 },
-    "拉美": { x: 0.30, y: 0.60 },
-    "东南亚": { x: 0.75, y: 0.50 },
-    "非洲": { x: 0.52, y: 0.55 },
-    "澳洲": { x: 0.85, y: 0.65 },
-    "北美": { x: 0.20, y: 0.35 },
+    "中国": [116.4, 39.9],
+    "德国": [13.4, 52.5],
+    "法国": [2.35, 48.86],
+    "意大利": [12.5, 41.9],
+    "西班牙": [-3.7, 40.4],
+    "美国": [-77.0, 38.9],
+    "巴西": [-47.9, -15.8],
+    "日本": [139.7, 35.7],
+    "韩国": [126.9, 37.6],
+    "印度": [77.2, 28.6],
+    "英国": [-0.13, 51.5],
+    "阿布扎比": [54.4, 24.5],
+    "中东": [54.4, 24.5],
+    "欧洲": [10.0, 50.0],
+    "拉美": [-60.0, -15.0],
+    "东南亚": [105.0, 15.0],
+    "非洲": [20.0, 0.0],
+    "澳洲": [151.2, -33.9],
+    "北美": [-100.0, 40.0],
   };
 
   // 判断新闻属于哪个主题
@@ -222,62 +222,60 @@
     `).join("");
   }
 
-  // ========== 3. 全球项目分布地图（精致版） ==========
+  // ========== 3. 全球项目分布地图（Leaflet真实交互式地图） ==========
+  let worldMapInstance = null;
+  let worldMapHeatLayer = null;
+  let worldMapHqLayer = null;
+  let worldMapInitialized = false;
+
   function renderWorldMap(events) {
     const container = document.querySelector("#world-map");
     if (!container) return;
 
-    const width = 440;
-    const height = 260;
-
-    // 等矩形投影坐标转换
-    function project(lon, lat) {
-      return {
-        x: ((lon + 180) / 360) * width,
-        y: ((90 - lat) / 180) * height
-      };
+    // 检查Leaflet是否加载
+    if (typeof L === "undefined") {
+      container.innerHTML = '<p class="viz-empty">地图库加载中，请刷新页面重试</p>';
+      return;
     }
 
-    // 生成经纬网格
-    let gridLines = "";
-    for (let lon = -150; lon <= 150; lon += 30) {
-      const p = project(lon, 0);
-      gridLines += `<line x1="${p.x}" y1="0" x2="${p.x}" y2="${height}" stroke="#e2e8f0" stroke-width="0.3" stroke-dasharray="2,2"/>`;
-    }
-    for (let lat = -60; lat <= 60; lat += 30) {
-      const p = project(0, lat);
-      gridLines += `<line x1="0" y1="${p.y}" x2="${width}" y2="${p.y}" stroke="#e2e8f0" stroke-width="0.3" stroke-dasharray="2,2"/>`;
+    // 初始化地图容器
+    if (!worldMapInitialized) {
+      container.innerHTML = '<div id="leaflet-map-container" style="width:100%;height:300px;border-radius:8px;"></div>';
+      worldMapInitialized = true;
     }
 
-    // 更精确的大陆轮廓（基于等矩形投影的简化多边形）
-    const continents = [
-      // 北美洲
-      { name: "北美", path: "M55,35 L75,28 L100,30 L120,38 L130,50 L125,65 L115,75 L100,82 L85,80 L70,72 L58,60 L52,48 Z", fill: "#d1d5db" },
-      // 格陵兰
-      { name: "格陵兰", path: "M130,18 L148,15 L155,25 L150,38 L138,40 L128,32 Z", fill: "#e5e7eb" },
-      // 南美洲
-      { name: "南美", path: "M115,95 L130,90 L142,98 L148,115 L145,135 L135,155 L122,165 L112,155 L108,135 L110,115 Z", fill: "#d1d5db" },
-      // 欧洲
-      { name: "欧洲", path: "M200,35 L220,30 L240,35 L248,45 L242,55 L228,60 L212,58 L200,50 Z", fill: "#d1d5db" },
-      // 非洲
-      { name: "非洲", path: "M205,65 L225,60 L245,68 L252,85 L250,105 L240,125 L225,138 L212,132 L202,115 L198,95 L200,78 Z", fill: "#d1d5db" },
-      // 亚洲
-      { name: "亚洲", path: "M250,28 L290,22 L330,28 L360,40 L370,55 L365,72 L350,82 L325,85 L300,80 L275,72 L258,60 L250,45 Z", fill: "#d1d5db" },
-      // 印度次大陆
-      { name: "印度", path: "M310,78 L322,75 L330,85 L325,100 L315,105 L308,95 Z", fill: "#d1d5db" },
-      // 东南亚
-      { name: "东南亚", path: "M345,88 L360,85 L368,95 L362,108 L350,110 L342,100 Z", fill: "#d1d5db" },
-      // 澳大利亚
-      { name: "澳洲", path: "M355,130 L380,125 L398,135 L400,150 L388,162 L368,160 L355,150 Z", fill: "#d1d5db" },
-      // 日本
-      { name: "日本", path: "M378,52 L385,48 L388,58 L382,65 L376,60 Z", fill: "#d1d5db" },
-      // 英国
-      { name: "英国", path: "M195,38 L202,35 L205,44 L198,48 Z", fill: "#d1d5db" }
-    ];
+    const mapContainer = document.querySelector("#leaflet-map-container");
+    if (!mapContainer) return;
 
-    let continentPaths = continents.map((c) =>
-      `<path d="${c.path}" fill="${c.fill}" stroke="#9ca3af" stroke-width="0.5" stroke-linejoin="round"/>`
-    ).join("");
+    // 第一次调用时初始化地图
+    if (!worldMapInstance) {
+      worldMapInstance = L.map("leaflet-map-container", {
+        center: [25, 20],
+        zoom: 2,
+        minZoom: 2,
+        maxZoom: 10,
+        scrollWheelZoom: false,
+        attributionControl: true
+      });
+
+      // CartoDB Positron浅色瓦片（更适合数据可视化，加载更快）
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+        maxZoom: 18,
+        subdomains: "abcd"
+      }).addTo(worldMapInstance);
+
+      // 创建标记层组
+      worldMapHeatLayer = L.layerGroup().addTo(worldMapInstance);
+      worldMapHqLayer = L.layerGroup().addTo(worldMapInstance);
+
+      // 修复地图尺寸
+      setTimeout(() => worldMapInstance.invalidateSize(), 100);
+    }
+
+    // 清除旧标记
+    worldMapHeatLayer.clearLayers();
+    worldMapHqLayer.clearLayers();
 
     // 统计各区域新闻数量
     const regionCounts = {};
@@ -291,30 +289,35 @@
 
     const maxRegionCount = Math.max(...Object.values(regionCounts), 1);
 
-    // 生成光晕热力点（径向渐变）
-    let heatDefs = "";
-    let heatDots = "";
-    let heatIndex = 0;
+    // 添加热力点
     Object.entries(regionCounts).forEach(([region, count]) => {
       const coord = REGION_COORDS[region];
       if (!coord) return;
-      const x = coord.x * width;
-      const y = coord.y * height;
-      const radius = 8 + (count / maxRegionCount) * 16;
-      const gradId = `heatGrad${heatIndex++}`;
+      const [lon, lat] = coord;
+      const radius = 8 + (count / maxRegionCount) * 20;
+      const opacity = 0.4 + (count / maxRegionCount) * 0.4;
 
-      heatDefs += `<radialGradient id="${gradId}" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#dc2626" stop-opacity="0.8"/>
-        <stop offset="40%" stop-color="#f97316" stop-opacity="0.5"/>
-        <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.1"/>
-      </radialGradient>`;
+      // 外圈光晕
+      L.circle([lat, lon], {
+        radius: radius * 50000,
+        color: "#dc2626",
+        weight: 0,
+        fillColor: "#f97316",
+        fillOpacity: opacity * 0.5
+      }).addTo(worldMapHeatLayer);
 
-      heatDots += `<circle cx="${x}" cy="${y}" r="${radius}" fill="url(#${gradId})"/>`;
-      heatDots += `<circle cx="${x}" cy="${y}" r="3.5" fill="#dc2626" stroke="#fff" stroke-width="1"/>`;
-      heatDots += `<text x="${x}" y="${y - radius - 5}" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700">${region} ${count}</text>`;
+      // 内圈实点
+      L.circleMarker([lat, lon], {
+        radius: Math.max(radius * 0.4, 5),
+        fillColor: "#dc2626",
+        color: "#fff",
+        weight: 1.5,
+        fillOpacity: 0.9
+      }).addTo(worldMapHeatLayer)
+      .bindPopup(`<strong>${region}</strong><br/>相关新闻：${count}条`);
     });
 
-    // 企业总部位置（按国家聚合，避免重叠）
+    // 企业总部位置（按国家聚合）
     const hqByCountry = {};
     window.ENERGY_NEWS_DATA.companies.forEach((company) => {
       const country = company.country;
@@ -322,69 +325,62 @@
       hqByCountry[country].push(company);
     });
 
-    let hqDots = "";
     Object.entries(hqByCountry).forEach(([country, companies]) => {
       const coord = REGION_COORDS[country];
       if (!coord) return;
-      const baseX = coord.x * width;
-      const baseY = coord.y * height;
+      const [lon, lat] = coord;
       const count = companies.length;
 
       if (count === 1) {
-        hqDots += `<circle cx="${baseX}" cy="${baseY}" r="4" fill="#2563eb" stroke="#fff" stroke-width="1.2"/>`;
+        const company = companies[0];
+        L.circleMarker([lat, lon], {
+          radius: 6,
+          fillColor: "#2563eb",
+          color: "#fff",
+          weight: 1.5,
+          fillOpacity: 0.9
+        }).addTo(worldMapHqLayer)
+        .bindPopup(`<strong>${company.name}</strong><br/>总部：${country}<br/>${company.shortName || ""}`);
       } else {
-        // 多个总部时环形排列
-        const ringRadius = 6;
-        companies.forEach((company, i) => {
-          const angle = (i / count) * Math.PI * 2;
-          const x = baseX + Math.cos(angle) * ringRadius;
-          const y = baseY + Math.sin(angle) * ringRadius;
-          hqDots += `<circle cx="${x}" cy="${y}" r="3" fill="#2563eb" stroke="#fff" stroke-width="1"/>`;
-        });
-        hqDots += `<circle cx="${baseX}" cy="${baseY}" r="2" fill="#1d4ed8"/>`;
-      }
-      // 国家总部数量标签
-      if (count >= 2) {
-        hqDots += `<text x="${baseX}" y="${baseY + 14}" text-anchor="middle" font-size="8" fill="#2563eb" font-weight="600">${count}家</text>`;
+        // 多家总部时用更大的标记，显示数量
+        L.circleMarker([lat, lon], {
+          radius: 8,
+          fillColor: "#1d4ed8",
+          color: "#fff",
+          weight: 2,
+          fillOpacity: 0.9
+        }).addTo(worldMapHqLayer)
+        .bindPopup(`<strong>${country}</strong><br/>${count}家企业总部：<br/>${companies.map(c => c.name).join("、")}`);
+
+        // 数量标签
+        L.marker([lat, lon], {
+          icon: L.divIcon({
+            className: "hq-count-label",
+            html: `<div style="background:#2563eb;color:#fff;font-size:10px;font-weight:700;padding:1px 5px;border-radius:8px;white-space:nowrap;">${count}家</div>`,
+            iconSize: [30, 16],
+            iconAnchor: [15, -8]
+          })
+        }).addTo(worldMapHqLayer);
       }
     });
 
-    // 指北针
-    const compass = `
-      <g transform="translate(${width - 25}, 20)">
-        <circle cx="0" cy="0" r="10" fill="#fff" stroke="#cbd5e1" stroke-width="0.5" opacity="0.9"/>
-        <path d="M0,-7 L3,0 L0,7 L-3,0 Z" fill="#dc2626"/>
-        <text x="0" y="-11" text-anchor="middle" font-size="7" fill="#64748b" font-weight="700">N</text>
-      </g>
-    `;
-
-    // 比例尺
-    const scaleBar = `
-      <g transform="translate(15, ${height - 18})">
-        <line x1="0" y1="0" x2="40" y2="0" stroke="#475569" stroke-width="1.5"/>
-        <line x1="0" y1="-3" x2="0" y2="3" stroke="#475569" stroke-width="1.5"/>
-        <line x1="20" y1="-2" x2="20" y2="2" stroke="#475569" stroke-width="1"/>
-        <line x1="40" y1="-3" x2="40" y2="3" stroke="#475569" stroke-width="1.5"/>
-        <text x="20" y="10" text-anchor="middle" font-size="7" fill="#64748b">~5000km</text>
-      </g>
-    `;
-
-    const svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%);border-radius:6px;">
-      <defs>${heatDefs}</defs>
-      ${gridLines}
-      ${continentPaths}
-      ${heatDots}
-      ${hqDots}
-      ${compass}
-      ${scaleBar}
-    </svg>`;
-
-    container.innerHTML = svg + `
+    // 更新图例
+    const legendHtml = `
       <div class="map-legend">
-        <span><span class="legend-dot" style="background:#dc2626"></span>项目热点（光晕=热度）</span>
-        <span><span class="legend-dot" style="background:#2563eb"></span>企业总部（环形=多家）</span>
+        <span><span class="legend-dot" style="background:#dc2626"></span>项目热点（点击查看详情）</span>
+        <span><span class="legend-dot" style="background:#2563eb"></span>企业总部（可缩放拖拽）</span>
       </div>
     `;
+
+    // 检查是否已经有图例容器
+    let legendContainer = container.querySelector(".map-legend");
+    if (!legendContainer) {
+      const legendDiv = document.createElement("div");
+      legendDiv.innerHTML = legendHtml;
+      container.appendChild(legendDiv.firstElementChild);
+    } else {
+      legendContainer.outerHTML = legendHtml;
+    }
   }
 
   // ========== 4. 能源产业链桑基图 ==========

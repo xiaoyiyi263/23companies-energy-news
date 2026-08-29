@@ -1502,3 +1502,34 @@ body.dark .viz-card {
 body.dark .trend-legend-item {
   color: #cbd5e1;
 }
+
+/* Leaflet真实地图样式 */
+#leaflet-map-container {
+  z-index: 1;
+  border: 1px solid #e2e8f0;
+}
+
+#leaflet-map-container .leaflet-control-attribution {
+  font-size: 9px;
+  background: rgba(255,255,255,0.8);
+}
+
+.hq-count-label {
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 深色模式下的Leaflet地图滤镜 */
+body.dark #leaflet-map-container {
+  filter: brightness(0.8) invert(0.05);
+  border-color: #334155;
+}
+
+body.dark #leaflet-map-container .leaflet-control-attribution {
+  background: rgba(15,23,42,0.8);
+  color: #94a3b8;
+}
+
+body.dark #leaflet-map-container .leaflet-control-attribution a {
+  color: #60a5fa;
+}
