@@ -46,12 +46,25 @@
             <option value="Q4">四季度</option>
           </select>
         </label>
+        <label>
+          重要性
+          <select id="importance-filter">
+            <option value="all">全部</option>
+            <option value="高">高</option>
+            <option value="中">中</option>
+            <option value="低">低</option>
+          </select>
+        </label>
         <label class="search-label">
           检索
           <div class="search-wrap">
             <input id="search-input" type="search" placeholder="关键词、业务、来源" />
             <button id="search-clear" type="button" class="search-clear" hidden aria-label="清空搜索">×</button>
           </div>
+        </label>
+        <label class="export-label">
+          <span style="visibility:hidden">导出</span>
+          <button id="export-btn" type="button" class="export-btn">导出当前筛选结果</button>
         </label>
       </section>
 
@@ -73,6 +86,17 @@
       </section>
 
       <section id="trend-overview" class="trend-overview" aria-label="季度发展趋势"></section>
+
+      <section id="tag-cloud" class="tag-cloud-section" aria-label="热点标签">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">热点标签</p>
+            <h2>当前筛选下的高频主题</h2>
+          </div>
+          <span class="badge">标签云</span>
+        </div>
+        <div id="tag-cloud-content" class="tag-cloud-content"></div>
+      </section>
 
       <section id="company-list" class="company-list" aria-live="polite"></section>
     </main>

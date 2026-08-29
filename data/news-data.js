@@ -1,5 +1,31 @@
 
 ﻿(() => {
+  const companyProfiles = {
+    "rwe": { headquarters: "德国埃森", business: "可再生能源、灵活性电源、能源贸易", website: "https://www.rwe.com", capacity: "约65GW（2031目标）", revenue: "调整后EBITDA约51亿欧元（2025）" },
+    "enel": { headquarters: "意大利罗马", business: "电力及天然气公用事业、可再生能源、电网", website: "https://www.enel.com", capacity: "约65GW", revenue: "约804亿欧元（2025）" },
+    "iberdrola": { headquarters: "西班牙毕尔巴鄂", business: "电力公用事业、电网、可再生能源", website: "https://www.iberdrola.com", capacity: "约62GW", revenue: "市值约1250亿欧元（2026初）" },
+    "edf": { headquarters: "法国巴黎", business: "核电、可再生能源、电力交易、能源服务", website: "https://www.edf.fr", capacity: "约130GW（含核电约63GW）", revenue: "法国最大电力生产商" },
+    "engie": { headquarters: "法国库尔贝瓦", business: "电力、天然气、能源服务、可再生能源", website: "https://www.engie.com", capacity: "约100GW", revenue: "全球最大能源服务公司之一" },
+    "duke-energy": { headquarters: "美国北卡罗来纳州夏洛特", business: "电力公用事业、受监管发电、电网", website: "https://www.duke-energy.com", capacity: "约58GW", revenue: "美国最大电力控股公司之一" },
+    "southern-company": { headquarters: "美国佐治亚州亚特兰大", business: "受监管电力公用事业、发电、天然气分销", website: "https://www.southerncompany.com", capacity: "约48GW", revenue: "美国东南部最大电力公司" },
+    "constellation": { headquarters: "美国马里兰州巴尔的摩", business: "核电、天然气、可再生能源发电、商业售电", website: "https://www.constellationenergy.com", capacity: "约32GW（含核电约22GW）", revenue: "美国最大核电运营商" },
+    "axia": { headquarters: "巴西圣保罗", business: "电力公用事业、输电、配电、可再生能源", website: "https://axia.com.br", capacity: "巴西最大电力企业之一", revenue: "巴西能源行业龙头" },
+    "jera": { headquarters: "日本东京", business: "火力发电、可再生能源、燃料采购、电力交易", website: "https://www.jera.co.jp", capacity: "约70GW（日本最大发电企业）", revenue: "日本最大电力公司" },
+    "kepco": { headquarters: "韩国首尔", business: "电力公用事业、发电、输电、配电、新能源", website: "https://www.kepco.co.kr", capacity: "约90GW", revenue: "韩国唯一电力公用事业公司" },
+    "ntpc": { headquarters: "印度新德里", business: "火力发电、可再生能源、电力交易", website: "https://ntpc.co.in", capacity: "约75GW（印度最大发电企业）", revenue: "印度最大电力公司" },
+    "datang": { headquarters: "中国北京", business: "火电、水电、风电、光伏、煤炭、能源服务", website: "https://www.china-cdt.com", capacity: "约170GW", revenue: "中国五大发电集团之一" },
+    "huadian": { headquarters: "中国北京", business: "发电、煤炭、金融、科工、新能源", website: "https://www.chd.com.cn", capacity: "约190GW", revenue: "中国五大发电集团之一" },
+    "spic": { headquarters: "中国北京", business: "电力、煤炭、铝业、物流、金融、新能源", website: "https://www.spic.com.cn", capacity: "约240GW（光伏装机全球第一）", revenue: "中国五大发电集团之一" },
+    "chn-energy": { headquarters: "中国北京", business: "煤炭、电力、运输、化工、新能源", website: "https://www.chnenergy.com.cn", capacity: "约270GW（全球最大煤炭生产企业）", revenue: "世界500强第80位左右" },
+    "ctg": { headquarters: "中国武汉", business: "水电、新能源、国际业务、金融", website: "https://www.ctg.com.cn", capacity: "约140GW（水电全球最大）", revenue: "全球最大水电开发运营企业" },
+    "cgn": { headquarters: "中国深圳", business: "核电、风电、光伏、水电、核燃料、能源服务", website: "https://www.cgnpc.com.cn", capacity: "在运核电装机约42GW（国内第一）", revenue: "中国最大核电运营商" },
+    "cr-power": { headquarters: "中国香港", business: "火电、风电、光伏、水电、分布式能源", website: "https://www.cr-power.com", capacity: "约70GW", revenue: "华润集团旗下电力上市平台" },
+    "geg": { headquarters: "中国广州", business: "电力、天然气、能源服务、新能源、金融", website: "https://www.geg.com.cn", capacity: "约50GW", revenue: "广东省属最大能源企业" },
+    "zj-energy": { headquarters: "中国杭州", business: "电力、煤炭、天然气、新能源、能源服务", website: "https://www.zjenergy.com.cn", capacity: "约45GW", revenue: "浙江省属最大能源企业" },
+    "beijing-energy": { headquarters: "中国北京", business: "电力、热力、煤炭、新能源、能源服务", website: "https://www.powerbeijing.com", capacity: "约40GW", revenue: "北京市属最大能源企业" },
+    "sdic-power": { headquarters: "中国北京", business: "水电、火电、风电、光伏、海外电力", website: "https://www.sdicpower.com", capacity: "约35GW", revenue: "国投集团旗下电力上市平台" },
+  };
+
   const companies = [
     ["rwe", "德国莱茵公司（RWE）", "RWE", "德国", "海外", "RWE Press & News", "https://www.rwe.com/en/press"],
     ["enel", "意大利国家电力公司（Enel）", "Enel", "意大利", "海外", "Enel Media", "https://www.enel.com/media/explore"],
@@ -31,6 +57,7 @@
     country,
     region,
     sources: [{ label, url }],
+    profile: companyProfiles[id] || {},
   }));
 
   const rows = [
@@ -587,6 +614,19 @@ const q3Rows = [
     return `Q${Math.ceil(Number(dateValue.slice(5, 7)) / 3)}`;
   }
 
+  function getImportance(title, summary, significance) {
+    const text = (title + " " + (summary || "") + " " + (significance || "")).toLowerCase();
+    const highKeywords = ["核准","获批","开工","奠基","并网","投产","投运","百亿","千亿","签约","战略合作","重组","分拆","上市","核电","首台","首批","首座","首个","突破","里程碑","最大","首创","全面建成","正式投运","首次并网","收购","并购","投资建设","开工建设","主体工程","获批建设","获得核准","项目核准"];
+    const lowKeywords = ["人事","任命","选举","董事长","总经理","董事","监事","分红","配股","派息","股东大会","年度报告","中期报告","季度报告","ESG","可持续发展报告","社会责任报告","股价","涨跌","市值","成交量","评级","目标价","业绩发布时间","公告将于","发布时间"];
+    for (const kw of highKeywords) {
+      if (text.includes(kw.toLowerCase())) return "高";
+    }
+    for (const kw of lowKeywords) {
+      if (text.includes(kw.toLowerCase())) return "低";
+    }
+    return "中";
+  }
+
   function makeDetails(event) {
     const company = companyById[event.companyId];
     const publishVerb = event.sourceType === "官网" ? "发布" : "经权威渠道披露";
@@ -1010,6 +1050,7 @@ const q3Rows = [
         sourceName,
         url,
         tags,
+        importance: getImportance(displayTitle, displaySummary, displaySignificance),
       };
       return {
         ...event,
