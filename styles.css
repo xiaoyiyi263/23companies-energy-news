@@ -1724,3 +1724,35 @@ body.dark .company-legend-compact .legend-title {
 body.dark .company-legend-compact .company-legend-item {
   color: #cbd5e1;
 }
+
+/* 地图垂直布局：地图在上占满全宽，图例在下方 */
+#world-map.world-map {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  min-height: auto !important;
+  width: 100% !important;
+}
+
+#world-map #leaflet-map-container {
+  width: 100% !important;
+  flex-shrink: 0;
+}
+
+/* 图例在地图下方，横向排列，占很少高度 */
+#world-map .company-legend {
+  width: 100% !important;
+  margin-top: 8px !important;
+  padding: 6px 0 !important;
+}
+
+#world-map .company-legend .company-legend-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 3px 14px !important;
+}
+
+#world-map .company-legend .company-legend-item {
+  font-size: 11px !important;
+}
