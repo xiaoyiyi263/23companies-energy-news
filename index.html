@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -19,6 +19,7 @@
           <strong id="event-count">0</strong>
           <span>条已录入事件</span>
         </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="切换深色模式">🌙</button>
       </div>
     </header>
 
@@ -87,6 +88,35 @@
 
       <section id="trend-overview" class="trend-overview" aria-label="季度发展趋势"></section>
 
+      <section id="data-overview" class="data-overview" aria-label="季度数据概览">
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">数据概览</p>
+            <h2>当前筛选数据统计</h2>
+          </div>
+          <span class="badge">可视化</span>
+        </div>
+        <div class="overview-grid">
+          <div class="overview-card">
+            <h3>各公司新闻数量</h3>
+            <div id="company-bar-chart" class="bar-chart"></div>
+          </div>
+          <div class="overview-card">
+            <h3>来源与重要性分布</h3>
+            <div class="donut-row">
+              <div class="donut-item">
+                <div id="source-donut" class="donut"></div>
+                <p class="donut-label">来源占比</p>
+              </div>
+              <div class="donut-item">
+                <div id="importance-donut" class="donut"></div>
+                <p class="donut-label">重要性分布</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="tag-cloud" class="tag-cloud-section" aria-label="热点标签">
         <div class="section-head">
           <div>
@@ -97,6 +127,14 @@
         </div>
         <div id="tag-cloud-content" class="tag-cloud-content"></div>
       </section>
+
+      <div class="view-toggle-bar">
+        <span class="view-toggle-label">视图：</span>
+        <div class="view-toggle-group">
+          <button id="view-company" class="view-toggle-btn active" type="button">按公司分组</button>
+          <button id="view-timeline" class="view-toggle-btn" type="button">按时间排序</button>
+        </div>
+      </div>
 
       <section id="company-list" class="company-list" aria-live="polite"></section>
     </main>
@@ -109,3 +147,4 @@
     <script src="app.js?v=20260829"></script>
   </body>
 </html>
+

@@ -6,6 +6,7 @@ const state = {
   quarter: "Q3",
   importance: "all",
   search: "",
+  view: "company",
 };
 
 let currentFilteredEvents = [];
@@ -19,6 +20,11 @@ const searchClear = document.querySelector("#search-clear");
 const exportBtn = document.querySelector("#export-btn");
 const trendOverview = document.querySelector("#trend-overview");
 const tagCloudContent = document.querySelector("#tag-cloud-content");
+const companyBarChart = document.querySelector("#company-bar-chart");
+const sourceDonut = document.querySelector("#source-donut");
+const importanceDonut = document.querySelector("#importance-donut");
+const viewCompanyBtn = document.querySelector("#view-company");
+const viewTimelineBtn = document.querySelector("#view-timeline");
 const companyList = document.querySelector("#company-list");
 
 function escapeHtml(value) {
@@ -118,6 +124,58 @@ function renderEvent(event) {
   `;
 }
 
+function renderTimeline(filteredEvents) {
+  const companyMap = {};
+  companies.forEach((c) => { companyMap[c.id] = c; });
+
+  const sorted = [...filteredEvents].sort((a, b) => b.date.localeCompare(a.date));
+
+  if (sorted.length === 0) {
+    return '<div class="empty">当前筛选条件下暂无新闻。</div>';
+  }
+
+  const groups = {};
+  sorted.forEach((event) => {
+    const month = event.date.slice(0, 7);
+    if (!groups[month]) groups[month] = [];
+    groups[month].push(event);
+  });
+
+  return Object.keys(groups).sort().reverse().map((month) => {
+    const monthEvents = groups[month];
+    const [year, mon] = month.split("-");
+    return `
+      <div class="timeline-month">
+        <h3 class="timeline-month-title">${year}年${parseInt(mon)}月 <span class="timeline-count">${monthEvents.length}条</span></h3>
+        <div class="timeline-list">
+          ${monthEvents.map((event) => {
+            const company = companyMap[event.companyId];
+            const sourceClass = event.sourceType === "官网" ? "official" : "authority";
+            const impClass = event.importance === "高" ? "imp-high" : event.importance === "低" ? "imp-low" : "imp-mid";
+            return `
+              <article class="event timeline-event">
+                <time class="event-date" datetime="${event.date}">${formatDate(event.date)}</time>
+                <div>
+                  <div class="event-meta">
+                    <span class="badge">${company ? escapeHtml(company.shortName) : escapeHtml(event.companyId)}</span>
+                    <span class="badge ${sourceClass}">${escapeHtml(event.sourceType)}</span>
+                    <span class="badge importance ${impClass}">${event.importance || "中"}</span>
+                  </div>
+                  <h3>${escapeHtml(event.title)}</h3>
+                  <div class="event-sections">
+                    <p><strong>新闻内容：</strong>${escapeHtml(event.details || event.summary)}</p>
+                  </div>
+                  <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
 function renderTrendOverview() {
   const trend = quarterTrends[state.quarter];
   if (!trend) {
@@ -150,7 +208,6 @@ function renderTrendOverview() {
 }
 
 function renderTagCloud(filteredEvents) {
-  // 统计标签频次
   const tagCount = {};
   filteredEvents.forEach((event) => {
     event.tags.forEach((tag) => {
@@ -158,7 +215,6 @@ function renderTagCloud(filteredEvents) {
     });
   });
 
-  // 转为数组并排序，取Top20
   const tags = Object.entries(tagCount)
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count)
@@ -174,16 +230,49 @@ function renderTagCloud(filteredEvents) {
 
   tagCloudContent.innerHTML = tags
     .map(({ tag, count }) => {
-      // 根据频次计算字号（14px - 28px）
       const ratio = maxCount === minCount ? 1 : (count - minCount) / (maxCount - minCount);
       const fontSize = Math.round(14 + ratio * 14);
-      // 根据频次计算颜色深度
       const opacity = 0.5 + ratio * 0.5;
       return `<button class="tag-cloud-item" data-tag="${escapeHtml(tag)}" style="font-size:${fontSize}px;opacity:${opacity}">
         ${escapeHtml(tag)} <span class="tag-count">${count}</span>
       </button>`;
     })
     .join("");
+}
+
+function renderDataOverview(filteredEvents) {
+  if (!companyBarChart || !sourceDonut || !importanceDonut) return;
+
+  const companyCounts = {};
+  filteredEvents.forEach((event) => {
+    companyCounts[event.companyId] = (companyCounts[event.companyId] || 0) + 1;
+  });
+
+  const sortedCompanies = companies
+    .map((c) => ({ ...c, count: companyCounts[c.id] || 0 }))
+    .filter((c) => c.count > 0)
+    .sort((a, b) => b.count - a.count);
+
+  const maxCount = sortedCompanies.length ? sortedCompanies[0].count : 1;
+
+  companyBarChart.innerHTML = sortedCompanies
+    .map((c) => {
+      const w = Math.max(4, (c.count / maxCount) * 100);
+      return `<div class="bar-row"><span class="bar-label" title="${escapeHtml(c.name)}">${escapeHtml(c.shortName)}</span><div class="bar-track"><div class="bar-fill" style="width:${w}%"></div></div><span class="bar-value">${c.count}</span></div>`;
+    })
+    .join("");
+
+  const officialCount = filteredEvents.filter((e) => e.sourceType === "官网").length;
+  const officialP = filteredEvents.length ? (officialCount / filteredEvents.length) * 100 : 0;
+  sourceDonut.style.background = `conic-gradient(#0f766e 0% ${officialP}%, #d97706 ${officialP}% 100%)`;
+  sourceDonut.innerHTML = `<div class="donut-inner"><strong>${officialCount}</strong><span>官网</span></div>`;
+
+  const imp = { "高": 0, "中": 0, "低": 0 };
+  filteredEvents.forEach((e) => { imp[e.importance || "中"] = (imp[e.importance || "中"] || 0) + 1; });
+  const total = filteredEvents.length || 1;
+  const hp = (imp["高"] / total) * 100, mp = (imp["中"] / total) * 100;
+  importanceDonut.style.background = `conic-gradient(#dc2626 0% ${hp}%, #d97706 ${hp}% ${hp + mp}%, #6b7280 ${hp + mp}% 100%)`;
+  importanceDonut.innerHTML = `<div class="donut-inner"><strong>${imp["高"]}</strong><span>高重要</span></div>`;
 }
 
 function render() {
@@ -199,6 +288,7 @@ function render() {
 
   currentFilteredEvents = filteredEvents;
   renderTagCloud(filteredEvents);
+  renderDataOverview(filteredEvents);
 
   const visibleCompanies = companies.filter((company) => {
     if (state.company !== "all" && company.id !== state.company) return false;
@@ -207,48 +297,52 @@ function render() {
     return true;
   });
 
-  companyList.innerHTML = visibleCompanies
-    .map((company) => {
-      const companyEvents = filteredEvents.filter((event) => event.companyId === company.id).sort((a, b) => a.date.localeCompare(b.date));
-      const coverage = getCoverage(company.id);
-      const profile = company.profile || {};
-      return `
-        <section class="company-block" data-company-id="${company.id}">
-          <header class="company-head">
-            <div>
-              <div class="company-title-row">
-                <h2 class="company-title">${escapeHtml(company.name)}</h2>
-                <button class="profile-toggle" data-company-id="${company.id}" aria-expanded="false">公司画像</button>
+  if (state.view === "timeline") {
+    companyList.innerHTML = renderTimeline(filteredEvents);
+  } else {
+    companyList.innerHTML = visibleCompanies
+      .map((company) => {
+        const companyEvents = filteredEvents.filter((event) => event.companyId === company.id).sort((a, b) => a.date.localeCompare(b.date));
+        const coverage = getCoverage(company.id);
+        const profile = company.profile || {};
+        return `
+          <section class="company-block" data-company-id="${company.id}">
+            <header class="company-head">
+              <div>
+                <div class="company-title-row">
+                  <h2 class="company-title">${escapeHtml(company.name)}</h2>
+                  <button class="profile-toggle" data-company-id="${company.id}" aria-expanded="false">公司画像</button>
+                </div>
+                ${companyQuarterSummaries[state.quarter]?.[company.id] ? `<p class="company-summary">${escapeHtml(companyQuarterSummaries[state.quarter][company.id])}</p>` : ""}
+                <div class="company-meta">
+                  <span class="badge">${escapeHtml(company.country)}</span>
+                  <span>${escapeHtml(company.region)}</span>
+                  <span>官网入口：${renderSources(company)}</span>
+                </div>
               </div>
-              ${companyQuarterSummaries[state.quarter]?.[company.id] ? `<p class="company-summary">${escapeHtml(companyQuarterSummaries[state.quarter][company.id])}</p>` : ""}
-              <div class="company-meta">
-                <span class="badge">${escapeHtml(company.country)}</span>
-                <span>${escapeHtml(company.region)}</span>
-                <span>官网入口：${renderSources(company)}</span>
+              <div class="coverage">
+                <strong>${coverage.count}/${coverage.target}</strong>
+                <span>当前筛选口径下的季度目标</span>
+              </div>
+            </header>
+            <div class="company-profile" id="profile-${company.id}" hidden>
+              <div class="profile-grid">
+                ${profile.headquarters ? `<div class="profile-item"><span class="profile-label">总部</span><span class="profile-value">${escapeHtml(profile.headquarters)}</span></div>` : ""}
+                ${profile.business ? `<div class="profile-item"><span class="profile-label">主营业务</span><span class="profile-value">${escapeHtml(profile.business)}</span></div>` : ""}
+                ${profile.capacity ? `<div class="profile-item"><span class="profile-label">装机规模</span><span class="profile-value">${escapeHtml(profile.capacity)}</span></div>` : ""}
+                ${profile.revenue ? `<div class="profile-item"><span class="profile-label">2025年营收</span><span class="profile-value">${escapeHtml(profile.revenue)}</span></div>` : ""}
+                ${profile.employees ? `<div class="profile-item"><span class="profile-label">员工人数</span><span class="profile-value">${escapeHtml(profile.employees)}</span></div>` : ""}
+                ${profile.website ? `<div class="profile-item"><span class="profile-label">官方网站</span><span class="profile-value"><a href="${escapeHtml(profile.website)}" target="_blank" rel="noreferrer">${escapeHtml(profile.website)}</a></span></div>` : ""}
               </div>
             </div>
-            <div class="coverage">
-              <strong>${coverage.count}/${coverage.target}</strong>
-              <span>当前筛选口径下的季度目标</span>
+            <div class="event-list">
+              ${companyEvents.length ? companyEvents.map(renderEvent).join("") : `<div class="empty">待补充：本公司当前筛选条件下暂无已录入事件。</div>`}
             </div>
-          </header>
-          <div class="company-profile" id="profile-${company.id}" hidden>
-            <div class="profile-grid">
-              ${profile.headquarters ? `<div class="profile-item"><span class="profile-label">总部</span><span class="profile-value">${escapeHtml(profile.headquarters)}</span></div>` : ""}
-              ${profile.business ? `<div class="profile-item"><span class="profile-label">主营业务</span><span class="profile-value">${escapeHtml(profile.business)}</span></div>` : ""}
-              ${profile.capacity ? `<div class="profile-item"><span class="profile-label">装机规模</span><span class="profile-value">${escapeHtml(profile.capacity)}</span></div>` : ""}
-              ${profile.revenue ? `<div class="profile-item"><span class="profile-label">2025年营收</span><span class="profile-value">${escapeHtml(profile.revenue)}</span></div>` : ""}
-              ${profile.employees ? `<div class="profile-item"><span class="profile-label">员工人数</span><span class="profile-value">${escapeHtml(profile.employees)}</span></div>` : ""}
-              ${profile.website ? `<div class="profile-item"><span class="profile-label">官方网站</span><span class="profile-value"><a href="${escapeHtml(profile.website)}" target="_blank" rel="noreferrer">${escapeHtml(profile.website)}</a></span></div>` : ""}
-            </div>
-          </div>
-          <div class="event-list">
-            ${companyEvents.length ? companyEvents.map(renderEvent).join("") : `<div class="empty">待补充：本公司当前筛选条件下暂无已录入事件。</div>`}
-          </div>
-        </section>
-      `;
-    })
-    .join("");
+          </section>
+        `;
+      })
+      .join("");
+  }
 
   const officialCount = filteredEvents.filter((event) => event.sourceType === "官网").length;
   const currentQuarter = state.quarter === "all" ? "Q1" : state.quarter;
@@ -263,7 +357,6 @@ function render() {
   document.querySelector("#coverage-gap").textContent = String(totalGap);
   document.querySelector("#last-updated").textContent = `最近更新：${meta.lastUpdated}`;
 
-  // 搜索结果计数 + 清空按钮显隐
   const filterResult = document.querySelector("#filter-result");
   const hasActiveFilter = state.company !== "all" || state.region !== "all" || state.quarter !== "all" || state.importance !== "all" || state.search.trim() !== "";
   if (hasActiveFilter) {
@@ -274,7 +367,7 @@ function render() {
     if (state.quarter !== "all") parts.push(`季度：${state.quarter}`);
     if (state.importance !== "all") parts.push(`重要性：${state.importance}`);
     if (state.search.trim()) parts.push(`关键词："${state.search.trim()}"`);
-    filterResult.innerHTML = `当前筛选（${parts.join("，")}）命中 <strong>${filteredEvents.length}</strong> 条新闻`;
+    filterResult.innerHTML = `当前筛选（${parts.join("，")}）命中<strong>${filteredEvents.length}</strong> 条新闻`;
   } else {
     filterResult.hidden = true;
   }
@@ -311,6 +404,20 @@ searchClear.addEventListener("click", () => {
   searchInput.value = "";
   render();
   searchInput.focus();
+});
+
+viewCompanyBtn.addEventListener("click", () => {
+  state.view = "company";
+  viewCompanyBtn.classList.add("active");
+  viewTimelineBtn.classList.remove("active");
+  render();
+});
+
+viewTimelineBtn.addEventListener("click", () => {
+  state.view = "timeline";
+  viewTimelineBtn.classList.add("active");
+  viewCompanyBtn.classList.remove("active");
+  render();
 });
 
 function exportToCSV() {
@@ -362,11 +469,6 @@ function exportToCSV() {
 
 exportBtn.addEventListener("click", exportToCSV);
 
-createCompanyOptions();
-quarterFilter.value = state.quarter;
-render();
-
-// 标签点击筛选 + 公司画像展开（事件委托）
 document.addEventListener("click", (event) => {
   const tagBtn = event.target.closest(".tag-btn");
   if (tagBtn) {
@@ -390,4 +492,22 @@ document.addEventListener("click", (event) => {
       profileBtn.classList.toggle("active", isHidden);
     }
   }
+});
+
+createCompanyOptions();
+quarterFilter.value = state.quarter;
+render();
+
+// 深色模式切换
+const themeToggle = document.querySelector("#theme-toggle");
+const savedTheme = localStorage.getItem("theme");
+if (savedTheme === "dark") {
+  document.body.classList.add("dark");
+  themeToggle.textContent = "☀️";
+}
+
+themeToggle.addEventListener("click", () => {
+  const isDark = document.body.classList.toggle("dark");
+  themeToggle.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("theme", isDark ? "dark" : "light");
 });
