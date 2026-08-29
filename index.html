@@ -94,7 +94,10 @@
             <p class="section-kicker">数据概览</p>
             <h2>当前筛选数据统计</h2>
           </div>
-          <span class="badge">可视化</span>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <button id="ai-analyze-btn" class="ai-analyze-btn" type="button">智能分析趋势</button>
+            <span class="badge">可视化</span>
+          </div>
         </div>
         <div class="overview-grid">
           <div class="overview-card">
@@ -115,6 +118,13 @@
             </div>
           </div>
         </div>
+        <div id="ai-analysis-result" class="ai-analysis-result" hidden>
+          <div class="ai-analysis-head">
+            <h3>智能趋势分析</h3>
+            <button id="copy-analysis-btn" class="copy-analysis-btn" type="button">复制文本</button>
+          </div>
+          <div id="ai-analysis-content" class="ai-analysis-content"></div>
+        </div>
       </section>
 
       <section id="tag-cloud" class="tag-cloud-section" aria-label="热点标签">
@@ -134,7 +144,24 @@
           <button id="view-company" class="view-toggle-btn active" type="button">按公司分组</button>
           <button id="view-timeline" class="view-toggle-btn" type="button">按时间排序</button>
         </div>
+        <button id="compare-toggle-btn" class="compare-toggle-btn" type="button">公司对比</button>
       </div>
+
+      <section id="compare-panel" class="compare-panel" hidden>
+        <div class="compare-selector">
+          <label>
+            公司A
+            <select id="compare-company-a"></select>
+          </label>
+          <span class="compare-vs">VS</span>
+          <label>
+            公司B
+            <select id="compare-company-b"></select>
+          </label>
+          <button id="start-compare-btn" class="start-compare-btn" type="button">开始对比</button>
+        </div>
+        <div id="compare-result" class="compare-result" hidden></div>
+      </section>
 
       <section id="company-list" class="company-list" aria-live="polite"></section>
     </main>

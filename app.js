@@ -511,3 +511,215 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = isDark ? "☀️" : "🌙";
   localStorage.setItem("theme", isDark ? "dark" : "light");
 });
+
+// 智能趋势分析
+const aiAnalyzeBtn = document.querySelector("#ai-analyze-btn");
+const aiAnalysisResult = document.querySelector("#ai-analysis-result");
+const aiAnalysisContent = document.querySelector("#ai-analysis-content");
+const copyAnalysisBtn = document.querySelector("#copy-analysis-btn");
+
+function generateAnalysis() {
+  const events = currentFilteredEvents;
+  if (events.length === 0) {
+    return "当前筛选条件下暂无新闻数据，无法生成分析。";
+  }
+
+  // 统计标签频次
+  const tagCount = {};
+  events.forEach((e) => {
+    e.tags.forEach((tag) => { tagCount[tag] = (tagCount[tag] || 0) + 1; });
+  });
+  const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+  // 统计公司新闻数量
+  const companyCount = {};
+  events.forEach((e) => { companyCount[e.companyId] = (companyCount[e.companyId] || 0) + 1; });
+  const topCompanies = Object.entries(companyCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const companyMap = {};
+  companies.forEach((c) => { companyMap[c.id] = c.shortName; });
+
+  // 统计重要性分布
+  const impCount = { "高": 0, "中": 0, "低": 0 };
+  events.forEach((e) => { impCount[e.importance || "中"] = (impCount[e.importance || "中"] || 0) + 1; });
+
+  // 统计来源占比
+  const officialCount = events.filter((e) => e.sourceType === "官网").length;
+  const officialRatio = Math.round((officialCount / events.length) * 100);
+
+  // 时间范围
+  const dates = events.map((e) => e.date).sort();
+  const dateRange = dates.length > 1 ? `${dates[0]} 至 ${dates[dates.length - 1]}` : dates[0];
+
+  // 生成分析文本
+  let analysis = `【数据概览】本次分析覆盖 ${events.length} 条新闻，时间范围 ${dateRange}，涉及 ${Object.keys(companyCount).length} 家企业。官网来源占比 ${officialRatio}%，高重要性事件 ${impCount["高"]} 条（占比 ${Math.round((impCount["高"] / events.length) * 100)}%）。\n\n`;
+
+  analysis += `【热点主题】本阶段高频主题集中在：${topTags.slice(0, 5).map(([tag, count]) => `${tag}（${count}条）`).join("、")}。`;
+  if (topTags.length > 5) {
+    analysis += `其次是 ${topTags.slice(5, 8).map(([tag]) => tag).join("、")} 等方向。`;
+  }
+  analysis += "\n\n";
+
+  analysis += `【企业动态】新闻数量居前的企业为：${topCompanies.map(([id, count]) => `${companyMap[id] || id}（${count}条）`).join("、")}。`;
+  const activeCompanies = topCompanies.length;
+  if (activeCompanies >= 3) {
+    analysis += `显示头部企业在本阶段动态更为密集。`;
+  }
+  analysis += "\n\n";
+
+  // 基于标签生成趋势判断
+  const trendKeywords = ["核电", "海上风电", "储能", "数据中心", "AI", "光伏", "电网", "氢能", "并购", "投资", "核准", "并网"];
+  const activeTrends = trendKeywords.filter((kw) => tagCount[kw] && tagCount[kw] >= 2);
+  if (activeTrends.length > 0) {
+    analysis += `【趋势判断】${activeTrends.slice(0, 3).join("、")} 等领域在本阶段表现活跃，`;
+    if (tagCount["数据中心"] || tagCount["AI"]) {
+      analysis += "AI与数据中心负荷增长正在重塑电源投资逻辑，";
+    }
+    if (tagCount["核电"] || tagCount["核准"]) {
+      analysis += "核电项目核准与建设节奏加快，";
+    }
+    if (tagCount["储能"]) {
+      analysis += "储能从配套设施升级为独立增长引擎，";
+    }
+    analysis += "行业整体呈现" + (activeTrends.length > 3 ? "多线并进" : "重点突破") + "的发展格局。\n\n";
+  }
+
+  analysis += `【信息质量】官网来源占比 ${officialRatio}%，数据权威性较高；高重要性事件 ${impCount["高"]} 条，建议重点关注上述热点主题中的重大项目节点和战略投资动向。`;
+
+  return analysis;
+}
+
+aiAnalyzeBtn.addEventListener("click", () => {
+  const analysis = generateAnalysis();
+  aiAnalysisContent.textContent = analysis;
+  aiAnalysisResult.hidden = false;
+  aiAnalysisResult.scrollIntoView({ behavior: "smooth", block: "nearest" });
+});
+
+copyAnalysisBtn.addEventListener("click", () => {
+  const text = aiAnalysisContent.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    copyAnalysisBtn.textContent = "已复制";
+    setTimeout(() => { copyAnalysisBtn.textContent = "复制文本"; }, 2000);
+  }).catch(() => {
+    // 降级方案
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    copyAnalysisBtn.textContent = "已复制";
+    setTimeout(() => { copyAnalysisBtn.textContent = "复制文本"; }, 2000);
+  });
+});
+
+// 公司对标对比
+const compareToggleBtn = document.querySelector("#compare-toggle-btn");
+const comparePanel = document.querySelector("#compare-panel");
+const compareCompanyA = document.querySelector("#compare-company-a");
+const compareCompanyB = document.querySelector("#compare-company-b");
+const startCompareBtn = document.querySelector("#start-compare-btn");
+const compareResult = document.querySelector("#compare-result");
+
+// 初始化对比下拉框
+function initCompareSelects() {
+  const options = companies.map((c) => `<option value="${c.id}">${c.shortName}</option>`).join("");
+  compareCompanyA.innerHTML = options;
+  compareCompanyB.innerHTML = options;
+  if (companies.length > 1) {
+    compareCompanyA.value = companies[0].id;
+    compareCompanyB.value = companies[1].id;
+  }
+}
+initCompareSelects();
+
+compareToggleBtn.addEventListener("click", () => {
+  const isHidden = comparePanel.hidden;
+  comparePanel.hidden = !isHidden;
+  compareToggleBtn.classList.toggle("active", isHidden);
+  if (isHidden) {
+    comparePanel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+});
+
+function getCompanyTags(companyId) {
+  const tagCount = {};
+  currentFilteredEvents
+    .filter((e) => e.companyId === companyId)
+    .forEach((e) => {
+      e.tags.forEach((tag) => { tagCount[tag] = (tagCount[tag] || 0) + 1; });
+    });
+  return Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 6);
+}
+
+function getCompanyHighImportanceEvents(companyId) {
+  return currentFilteredEvents
+    .filter((e) => e.companyId === companyId && e.importance === "高")
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 5);
+}
+
+startCompareBtn.addEventListener("click", () => {
+  const idA = compareCompanyA.value;
+  const idB = compareCompanyB.value;
+  if (idA === idB) {
+    alert("请选择两家不同的公司进行对比。");
+    return;
+  }
+
+  const companyA = companies.find((c) => c.id === idA);
+  const companyB = companies.find((c) => c.id === idB);
+  const eventsA = currentFilteredEvents.filter((e) => e.companyId === idA);
+  const eventsB = currentFilteredEvents.filter((e) => e.companyId === idB);
+  const tagsA = getCompanyTags(idA);
+  const tagsB = getCompanyTags(idB);
+  const highA = getCompanyHighImportanceEvents(idA);
+  const highB = getCompanyHighImportanceEvents(idB);
+
+  const renderTagList = (tags) => tags.length
+    ? tags.map(([tag, count]) => `<span class="compare-tag">${escapeHtml(tag)} <em>${count}</em></span>`).join("")
+    : '<span class="compare-empty">暂无标签数据</span>';
+
+  const renderHighEvents = (events) => events.length
+    ? events.map((e) => `<li><span class="compare-event-date">${formatDate(e.date)}</span>${escapeHtml(e.title)}</li>`).join("")
+    : '<li class="compare-empty">暂无高重要性事件</li>';
+
+  compareResult.innerHTML = `
+    <div class="compare-grid">
+      <div class="compare-column">
+        <h3 class="compare-company-name">${escapeHtml(companyA.name)}</h3>
+        <div class="compare-stats">
+          <div class="compare-stat"><span>新闻数量</span><strong>${eventsA.length}</strong></div>
+          <div class="compare-stat"><span>高重要性</span><strong>${highA.length}</strong></div>
+          <div class="compare-stat"><span>官网占比</span><strong>${eventsA.length ? Math.round((eventsA.filter(e => e.sourceType === "官网").length / eventsA.length) * 100) : 0}%</strong></div>
+        </div>
+        <div class="compare-section">
+          <h4>热点标签</h4>
+          <div class="compare-tags">${renderTagList(tagsA)}</div>
+        </div>
+        <div class="compare-section">
+          <h4>高重要性事件</h4>
+          <ul class="compare-events">${renderHighEvents(highA)}</ul>
+        </div>
+      </div>
+      <div class="compare-divider"></div>
+      <div class="compare-column">
+        <h3 class="compare-company-name">${escapeHtml(companyB.name)}</h3>
+        <div class="compare-stats">
+          <div class="compare-stat"><span>新闻数量</span><strong>${eventsB.length}</strong></div>
+          <div class="compare-stat"><span>高重要性</span><strong>${highB.length}</strong></div>
+          <div class="compare-stat"><span>官网占比</span><strong>${eventsB.length ? Math.round((eventsB.filter(e => e.sourceType === "官网").length / eventsB.length) * 100) : 0}%</strong></div>
+        </div>
+        <div class="compare-section">
+          <h4>热点标签</h4>
+          <div class="compare-tags">${renderTagList(tagsB)}</div>
+        </div>
+        <div class="compare-section">
+          <h4>高重要性事件</h4>
+          <ul class="compare-events">${renderHighEvents(highB)}</ul>
+        </div>
+      </div>
+    </div>
+  `;
+  compareResult.hidden = false;
+});
