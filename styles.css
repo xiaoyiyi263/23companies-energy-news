@@ -1392,3 +1392,113 @@ body.dark .compare-tag em {
 body.dark .compare-events li {
   background: #0f172a;
 }
+
+/* 创新可视化区域 */
+.innovative-viz {
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+.viz-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.viz-card {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.viz-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.viz-desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.radar-chart,
+.trend-line-chart,
+.world-map,
+.sankey-diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 240px;
+}
+
+.viz-empty {
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* 趋势图图例 */
+.trend-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+  justify-content: center;
+}
+
+.trend-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.trend-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* 地图图例 */
+.map-legend {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+@media (max-width: 780px) {
+  .viz-grid-2x2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+body.dark .viz-card {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+body.dark .trend-legend-item {
+  color: #cbd5e1;
+}

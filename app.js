@@ -1,4 +1,4 @@
-const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {} } = window.ENERGY_NEWS_DATA;
+﻿const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {} } = window.ENERGY_NEWS_DATA;
 
 const state = {
   company: "all",
@@ -289,6 +289,7 @@ function render() {
   currentFilteredEvents = filteredEvents;
   renderTagCloud(filteredEvents);
   renderDataOverview(filteredEvents);
+  if (window.renderInnovativeViz) window.renderInnovativeViz(filteredEvents);
 
   const visibleCompanies = companies.filter((company) => {
     if (state.company !== "all" && company.id !== state.company) return false;
@@ -723,3 +724,4 @@ startCompareBtn.addEventListener("click", () => {
   `;
   compareResult.hidden = false;
 });
+
