@@ -245,7 +245,7 @@
 
     // 初始化地图容器
     if (!worldMapInitialized) {
-      container.innerHTML = '<div id="leaflet-map-container" style="width:100%;height:320px;border-radius:8px;"></div>';
+      container.innerHTML = '<div id="leaflet-map-container" style="width:100%;height:500px;border-radius:10px;"></div>';
       worldMapInitialized = true;
     }
 
@@ -263,11 +263,10 @@
         attributionControl: true
       });
 
-      // CartoDB Positron浅色瓦片
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        maxZoom: 18,
-        subdomains: "abcd"
+      // OpenStreetMap标准瓦片（免费，无需API key）
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18
       }).addTo(worldMapInstance);
 
       // 创建标记层组
@@ -325,38 +324,38 @@
         // 单一企业：用该企业颜色
         const [companyId, data] = companies[0];
         const color = getCompanyColor(companyIndexMap[companyId]);
-        const radius = 6 + (data.count / maxCount) * 14;
+        const radius = 10 + (data.count / maxCount) * 22;
 
         // 光晕
         L.circle([lat, lon], {
-          radius: radius * 40000,
+          radius: radius * 50000,
           color: color,
           weight: 0,
           fillColor: color,
-          fillOpacity: 0.25
+          fillOpacity: 0.3
         }).addTo(worldMapHeatLayer);
 
         // 实点
         L.circleMarker([lat, lon], {
-          radius: Math.max(radius * 0.5, 5),
+          radius: Math.max(radius * 0.55, 7),
           fillColor: color,
           color: "#fff",
-          weight: 1.5,
-          fillOpacity: 0.9
+          weight: 2,
+          fillOpacity: 0.92
         }).addTo(worldMapHeatLayer)
         .bindPopup(`<strong>${region}</strong><br/>${data.company.name}<br/>项目：${data.count}个`);
       } else {
         // 多家企业：环形排列不同颜色点
-        const ringRadius = 10;
+        const ringRadius = 16;
         const totalCount = companies.reduce((sum, [, d]) => sum + d.count, 0);
 
         // 地区总光晕
         L.circle([lat, lon], {
-          radius: (8 + totalCount / maxCount * 12) * 40000,
+          radius: (12 + totalCount / maxCount * 16) * 50000,
           color: "#64748b",
           weight: 0,
           fillColor: "#94a3b8",
-          fillOpacity: 0.15
+          fillOpacity: 0.18
         }).addTo(worldMapHeatLayer);
 
         companies.forEach(([companyId, data], i) => {
@@ -364,14 +363,14 @@
           const angle = (i / companies.length) * Math.PI * 2 - Math.PI / 2;
           const pointLon = lon + (Math.cos(angle) * ringRadius) / 111 / Math.cos(lat * Math.PI / 180);
           const pointLat = lat + (Math.sin(angle) * ringRadius) / 111;
-          const radius = 4 + (data.count / maxCount) * 8;
+          const radius = 6 + (data.count / maxCount) * 12;
 
           L.circleMarker([pointLat, pointLon], {
-            radius: Math.max(radius, 4),
+            radius: Math.max(radius, 6),
             fillColor: color,
             color: "#fff",
-            weight: 1.2,
-            fillOpacity: 0.9
+            weight: 1.8,
+            fillOpacity: 0.92
           }).addTo(worldMapHeatLayer)
           .bindPopup(`<strong>${region}</strong><br/>${data.company.name}<br/>项目：${data.count}个`);
         });
@@ -380,18 +379,17 @@
         L.marker([lat, lon], {
           icon: L.divIcon({
             className: "region-total-label",
-            html: `<div style="background:#1e293b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;white-space:nowrap;border:1.5px solid #fff;">${totalCount}</div>`,
-            iconSize: [24, 18],
-            iconAnchor: [12, 9]
+            html: `<div style="background:#1e293b;color:#fff;font-size:13px;font-weight:700;padding:3px 9px;border-radius:12px;white-space:nowrap;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${totalCount}</div>`,
+            iconSize: [32, 24],
+            iconAnchor: [16, 12]
           })
         }).addTo(worldMapHeatLayer);
       }
     });
 
-    // 生成企业图例
+    // 生成企业图例（显示全部有项目的企业）
     const legendCompanies = window.ENERGY_NEWS_DATA.companies
-      .filter((c) => activeCompanies.has(c.id))
-      .slice(0, 12);
+      .filter((c) => activeCompanies.has(c.id));
 
     const legendItems = legendCompanies.map((c) => {
       const color = getCompanyColor(companyIndexMap[c.id]);
@@ -400,12 +398,10 @@
       </span>`;
     }).join("");
 
-    const moreText = activeCompanies.size > 12 ? `等${activeCompanies.size}家` : "";
-
     const legendHtml = `
       <div class="map-legend company-legend">
-        <span class="legend-title">企业项目布局（颜色区分企业，点击查看详情）</span>
-        <div class="company-legend-grid">${legendItems}${moreText}</div>
+        <span class="legend-title">企业图例（共${activeCompanies.size}家企业有新建项目，颜色对应企业，点击地图点查看详情）</span>
+        <div class="company-legend-grid">${legendItems}</div>
       </div>
     `;
 
