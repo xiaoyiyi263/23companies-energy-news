@@ -1670,3 +1670,57 @@ body.dark .company-legend-item {
 body.dark #world-map #leaflet-map-container {
   border-color: #334155;
 }
+
+/* 紧凑企业图例 - 不占大块空间 */
+.company-legend-compact {
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.company-legend-compact .legend-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 6px;
+  display: block;
+}
+
+.company-legend-compact .company-legend-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.company-legend-compact .company-legend-item {
+  font-size: 11px;
+  font-weight: 500;
+  color: #475569;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.company-legend-compact .company-legend-item .legend-dot {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid rgba(255,255,255,0.9);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+
+/* 地图容器650px高 */
+#world-map #leaflet-map-container {
+  height: 650px !important;
+}
+
+body.dark .company-legend-compact .legend-title {
+  color: #94a3b8;
+}
+
+body.dark .company-legend-compact .company-legend-item {
+  color: #cbd5e1;
+}

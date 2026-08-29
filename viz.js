@@ -245,7 +245,7 @@
 
     // 初始化地图容器
     if (!worldMapInitialized) {
-      container.innerHTML = '<div id="leaflet-map-container" style="width:100%;height:500px;border-radius:10px;"></div>';
+      container.innerHTML = '<div id="leaflet-map-container" style="width:100%;height:650px;border-radius:10px;"></div>';
       worldMapInitialized = true;
     }
 
@@ -387,7 +387,7 @@
       }
     });
 
-    // 生成企业图例（显示全部有项目的企业）
+    // 生成紧凑的企业图例（横向小标签）
     const legendCompanies = window.ENERGY_NEWS_DATA.companies
       .filter((c) => activeCompanies.has(c.id));
 
@@ -399,8 +399,8 @@
     }).join("");
 
     const legendHtml = `
-      <div class="map-legend company-legend">
-        <span class="legend-title">企业图例（共${activeCompanies.size}家企业有新建项目，颜色对应企业，点击地图点查看详情）</span>
+      <div class="map-legend company-legend company-legend-compact">
+        <span class="legend-title">${activeCompanies.size}家企业项目布局 · 颜色对应企业 · 点击地图点查看详情</span>
         <div class="company-legend-grid">${legendItems}</div>
       </div>
     `;
