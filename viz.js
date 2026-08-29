@@ -222,22 +222,62 @@
     `).join("");
   }
 
-  // ========== 3. 全球项目分布地图 ==========
+  // ========== 3. 全球项目分布地图（精致版） ==========
   function renderWorldMap(events) {
     const container = document.querySelector("#world-map");
     if (!container) return;
 
-    const width = 420;
-    const height = 240;
+    const width = 440;
+    const height = 260;
 
-    // 简化的世界地图轮廓（用SVG路径绘制大致的大陆形状）
-    const worldPaths = `
-      <path d="M60,50 Q80,30 120,35 Q160,40 180,60 Q200,80 180,100 Q160,120 120,115 Q80,110 60,90 Q40,70 60,50 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>
-      <path d="M200,40 Q240,30 280,45 Q320,60 310,90 Q300,120 270,130 Q240,140 210,125 Q190,110 200,40 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>
-      <path d="M280,130 Q310,140 320,170 Q330,200 300,210 Q270,220 260,190 Q250,160 280,130 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>
-      <path d="M100,140 Q130,135 150,155 Q170,175 160,200 Q150,220 120,215 Q90,210 85,185 Q80,160 100,140 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>
-      <path d="M320,160 Q350,155 370,175 Q390,195 380,215 Q370,230 340,225 Q310,220 315,195 Q320,175 320,160 Z" fill="#e2e8f0" stroke="#cbd5e1" stroke-width="0.5"/>
-    `;
+    // 等矩形投影坐标转换
+    function project(lon, lat) {
+      return {
+        x: ((lon + 180) / 360) * width,
+        y: ((90 - lat) / 180) * height
+      };
+    }
+
+    // 生成经纬网格
+    let gridLines = "";
+    for (let lon = -150; lon <= 150; lon += 30) {
+      const p = project(lon, 0);
+      gridLines += `<line x1="${p.x}" y1="0" x2="${p.x}" y2="${height}" stroke="#e2e8f0" stroke-width="0.3" stroke-dasharray="2,2"/>`;
+    }
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const p = project(0, lat);
+      gridLines += `<line x1="0" y1="${p.y}" x2="${width}" y2="${p.y}" stroke="#e2e8f0" stroke-width="0.3" stroke-dasharray="2,2"/>`;
+    }
+
+    // 更精确的大陆轮廓（基于等矩形投影的简化多边形）
+    const continents = [
+      // 北美洲
+      { name: "北美", path: "M55,35 L75,28 L100,30 L120,38 L130,50 L125,65 L115,75 L100,82 L85,80 L70,72 L58,60 L52,48 Z", fill: "#d1d5db" },
+      // 格陵兰
+      { name: "格陵兰", path: "M130,18 L148,15 L155,25 L150,38 L138,40 L128,32 Z", fill: "#e5e7eb" },
+      // 南美洲
+      { name: "南美", path: "M115,95 L130,90 L142,98 L148,115 L145,135 L135,155 L122,165 L112,155 L108,135 L110,115 Z", fill: "#d1d5db" },
+      // 欧洲
+      { name: "欧洲", path: "M200,35 L220,30 L240,35 L248,45 L242,55 L228,60 L212,58 L200,50 Z", fill: "#d1d5db" },
+      // 非洲
+      { name: "非洲", path: "M205,65 L225,60 L245,68 L252,85 L250,105 L240,125 L225,138 L212,132 L202,115 L198,95 L200,78 Z", fill: "#d1d5db" },
+      // 亚洲
+      { name: "亚洲", path: "M250,28 L290,22 L330,28 L360,40 L370,55 L365,72 L350,82 L325,85 L300,80 L275,72 L258,60 L250,45 Z", fill: "#d1d5db" },
+      // 印度次大陆
+      { name: "印度", path: "M310,78 L322,75 L330,85 L325,100 L315,105 L308,95 Z", fill: "#d1d5db" },
+      // 东南亚
+      { name: "东南亚", path: "M345,88 L360,85 L368,95 L362,108 L350,110 L342,100 Z", fill: "#d1d5db" },
+      // 澳大利亚
+      { name: "澳洲", path: "M355,130 L380,125 L398,135 L400,150 L388,162 L368,160 L355,150 Z", fill: "#d1d5db" },
+      // 日本
+      { name: "日本", path: "M378,52 L385,48 L388,58 L382,65 L376,60 Z", fill: "#d1d5db" },
+      // 英国
+      { name: "英国", path: "M195,38 L202,35 L205,44 L198,48 Z", fill: "#d1d5db" }
+    ];
+
+    let continentPaths = continents.map((c) =>
+      `<path d="${c.path}" fill="${c.fill}" stroke="#9ca3af" stroke-width="0.5" stroke-linejoin="round"/>`
+    ).join("");
 
     // 统计各区域新闻数量
     const regionCounts = {};
@@ -251,41 +291,98 @@
 
     const maxRegionCount = Math.max(...Object.values(regionCounts), 1);
 
-    // 生成热力点
+    // 生成光晕热力点（径向渐变）
+    let heatDefs = "";
     let heatDots = "";
+    let heatIndex = 0;
     Object.entries(regionCounts).forEach(([region, count]) => {
       const coord = REGION_COORDS[region];
       if (!coord) return;
       const x = coord.x * width;
       const y = coord.y * height;
-      const radius = 6 + (count / maxRegionCount) * 14;
-      const opacity = 0.3 + (count / maxRegionCount) * 0.5;
-      heatDots += `<circle cx="${x}" cy="${y}" r="${radius}" fill="#0f766e" opacity="${opacity}"/>`;
-      heatDots += `<circle cx="${x}" cy="${y}" r="3" fill="#dc2626"/>`;
-      heatDots += `<text x="${x}" y="${y - radius - 4}" text-anchor="middle" font-size="9" fill="#334155" font-weight="600">${region}(${count})</text>`;
+      const radius = 8 + (count / maxRegionCount) * 16;
+      const gradId = `heatGrad${heatIndex++}`;
+
+      heatDefs += `<radialGradient id="${gradId}" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#dc2626" stop-opacity="0.8"/>
+        <stop offset="40%" stop-color="#f97316" stop-opacity="0.5"/>
+        <stop offset="100%" stop-color="#fbbf24" stop-opacity="0.1"/>
+      </radialGradient>`;
+
+      heatDots += `<circle cx="${x}" cy="${y}" r="${radius}" fill="url(#${gradId})"/>`;
+      heatDots += `<circle cx="${x}" cy="${y}" r="3.5" fill="#dc2626" stroke="#fff" stroke-width="1"/>`;
+      heatDots += `<text x="${x}" y="${y - radius - 5}" text-anchor="middle" font-size="9" fill="#1e293b" font-weight="700">${region} ${count}</text>`;
     });
 
-    // 企业总部位置
-    let hqDots = "";
+    // 企业总部位置（按国家聚合，避免重叠）
+    const hqByCountry = {};
     window.ENERGY_NEWS_DATA.companies.forEach((company) => {
       const country = company.country;
-      const coord = REGION_COORDS[country];
-      if (!coord) return;
-      const x = coord.x * width + (Math.random() - 0.5) * 10;
-      const y = coord.y * height + (Math.random() - 0.5) * 10;
-      hqDots += `<circle cx="${x}" cy="${y}" r="3" fill="#2563eb" stroke="#fff" stroke-width="1"/>`;
+      if (!hqByCountry[country]) hqByCountry[country] = [];
+      hqByCountry[country].push(company);
     });
 
-    const svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-      ${worldPaths}
+    let hqDots = "";
+    Object.entries(hqByCountry).forEach(([country, companies]) => {
+      const coord = REGION_COORDS[country];
+      if (!coord) return;
+      const baseX = coord.x * width;
+      const baseY = coord.y * height;
+      const count = companies.length;
+
+      if (count === 1) {
+        hqDots += `<circle cx="${baseX}" cy="${baseY}" r="4" fill="#2563eb" stroke="#fff" stroke-width="1.2"/>`;
+      } else {
+        // 多个总部时环形排列
+        const ringRadius = 6;
+        companies.forEach((company, i) => {
+          const angle = (i / count) * Math.PI * 2;
+          const x = baseX + Math.cos(angle) * ringRadius;
+          const y = baseY + Math.sin(angle) * ringRadius;
+          hqDots += `<circle cx="${x}" cy="${y}" r="3" fill="#2563eb" stroke="#fff" stroke-width="1"/>`;
+        });
+        hqDots += `<circle cx="${baseX}" cy="${baseY}" r="2" fill="#1d4ed8"/>`;
+      }
+      // 国家总部数量标签
+      if (count >= 2) {
+        hqDots += `<text x="${baseX}" y="${baseY + 14}" text-anchor="middle" font-size="8" fill="#2563eb" font-weight="600">${count}家</text>`;
+      }
+    });
+
+    // 指北针
+    const compass = `
+      <g transform="translate(${width - 25}, 20)">
+        <circle cx="0" cy="0" r="10" fill="#fff" stroke="#cbd5e1" stroke-width="0.5" opacity="0.9"/>
+        <path d="M0,-7 L3,0 L0,7 L-3,0 Z" fill="#dc2626"/>
+        <text x="0" y="-11" text-anchor="middle" font-size="7" fill="#64748b" font-weight="700">N</text>
+      </g>
+    `;
+
+    // 比例尺
+    const scaleBar = `
+      <g transform="translate(15, ${height - 18})">
+        <line x1="0" y1="0" x2="40" y2="0" stroke="#475569" stroke-width="1.5"/>
+        <line x1="0" y1="-3" x2="0" y2="3" stroke="#475569" stroke-width="1.5"/>
+        <line x1="20" y1="-2" x2="20" y2="2" stroke="#475569" stroke-width="1"/>
+        <line x1="40" y1="-3" x2="40" y2="3" stroke="#475569" stroke-width="1.5"/>
+        <text x="20" y="10" text-anchor="middle" font-size="7" fill="#64748b">~5000km</text>
+      </g>
+    `;
+
+    const svg = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="background:linear-gradient(180deg,#eff6ff 0%,#dbeafe 100%);border-radius:6px;">
+      <defs>${heatDefs}</defs>
+      ${gridLines}
+      ${continentPaths}
       ${heatDots}
       ${hqDots}
+      ${compass}
+      ${scaleBar}
     </svg>`;
 
     container.innerHTML = svg + `
       <div class="map-legend">
-        <span><span class="legend-dot" style="background:#dc2626"></span>项目热点</span>
-        <span><span class="legend-dot" style="background:#2563eb"></span>企业总部</span>
+        <span><span class="legend-dot" style="background:#dc2626"></span>项目热点（光晕=热度）</span>
+        <span><span class="legend-dot" style="background:#2563eb"></span>企业总部（环形=多家）</span>
       </div>
     `;
   }
