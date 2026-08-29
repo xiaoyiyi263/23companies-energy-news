@@ -3,7 +3,7 @@ const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {
 const state = {
   company: "all",
   region: "all",
-  quarter: "Q2",
+  quarter: "Q3",
   search: "",
 };
 
@@ -11,6 +11,7 @@ const companyFilter = document.querySelector("#company-filter");
 const regionFilter = document.querySelector("#region-filter");
 const quarterFilter = document.querySelector("#quarter-filter");
 const searchInput = document.querySelector("#search-input");
+const searchClear = document.querySelector("#search-clear");
 const trendOverview = document.querySelector("#trend-overview");
 const companyList = document.querySelector("#company-list");
 
@@ -95,7 +96,7 @@ function renderEvent(event) {
       <div>
         <div class="event-meta">
           <span class="badge ${sourceClass}">${escapeHtml(event.sourceType)}</span>
-          <span>${event.tags.map(escapeHtml).join(" · ")}</span>
+          <span class="event-tags">${event.tags.map(tag => `<button class="tag-btn" data-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}</span>
         </div>
         <h3>${escapeHtml(event.title)}</h3>
         <div class="event-sections">
@@ -197,6 +198,22 @@ function render() {
   document.querySelector("#official-ratio").textContent = filteredEvents.length ? `${Math.round((officialCount / filteredEvents.length) * 100)}%` : "0%";
   document.querySelector("#coverage-gap").textContent = String(totalGap);
   document.querySelector("#last-updated").textContent = `最近更新：${meta.lastUpdated}`;
+
+  // 搜索结果计数 + 清空按钮显隐
+  const filterResult = document.querySelector("#filter-result");
+  const hasActiveFilter = state.company !== "all" || state.region !== "all" || state.quarter !== "all" || state.search.trim() !== "";
+  if (hasActiveFilter) {
+    filterResult.hidden = false;
+    const parts = [];
+    if (state.company !== "all") parts.push(`公司：${companies.find(c => c.id === state.company)?.shortName || state.company}`);
+    if (state.region !== "all") parts.push(`地区：${state.region}`);
+    if (state.quarter !== "all") parts.push(`季度：${state.quarter}`);
+    if (state.search.trim()) parts.push(`关键词："${state.search.trim()}"`);
+    filterResult.innerHTML = `当前筛选（${parts.join("，")}）命中 <strong>${filteredEvents.length}</strong> 条新闻`;
+  } else {
+    filterResult.hidden = true;
+  }
+  searchClear.hidden = state.search.trim() === "";
 }
 
 companyFilter.addEventListener("change", (event) => {
@@ -219,6 +236,25 @@ searchInput.addEventListener("input", (event) => {
   render();
 });
 
+searchClear.addEventListener("click", () => {
+  state.search = "";
+  searchInput.value = "";
+  render();
+  searchInput.focus();
+});
+
 createCompanyOptions();
 quarterFilter.value = state.quarter;
 render();
+
+// 标签点击筛选（事件委托，动态渲染的标签也能响应）
+document.addEventListener("click", (event) => {
+  const tagBtn = event.target.closest(".tag-btn");
+  if (tagBtn) {
+    const tag = tagBtn.dataset.tag;
+    state.search = tag;
+    searchInput.value = tag;
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
