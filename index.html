@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -75,14 +75,14 @@
       <section class="metrics" aria-label="覆盖情况">
         <div>
           <span>公司数量</span>
-          <strong id="company-count">23</strong>
+          <strong id="company-count">24</strong>
         </div>
         <div>
           <span>官网来源占比</span>
           <strong id="official-ratio">0%</strong>
         </div>
         <div>
-          <span>本季度缺口</span>
+          <span id="gap-label">本季度缺口</span>
           <strong id="coverage-gap">0</strong>
         </div>
       </section>
@@ -137,7 +137,8 @@
           <span class="badge">标签云</span>
         </div>
         <div id="tag-cloud-content" class="tag-cloud-content"></div>
-      
+      </section>
+
       <section id="innovative-viz" class="innovative-viz">
         <div class="section-head">
           <div>
@@ -172,7 +173,6 @@
           <div id="sankey-diagram" class="sankey-diagram"></div>
         </div>
       </section>
-      </section>
 
       <div class="view-toggle-bar">
         <span class="view-toggle-label">视图：</span>
@@ -203,13 +203,14 @@
     </main>
 
     <footer>
-      <p>采集起点：2026-01-01。每家公司每季度目标不少于 5 条重大事件；官网不足时使用新华社、国资委、交易所公告、主流财经媒体等补充。</p>
+      <p>采集起点：2026-01-01。当前覆盖 24 家公司，每家公司每季度目标不少于 5 条重大事件；官网不足时使用新华社、国资委、交易所公告、主流财经媒体等补充。</p>
     </footer>
 
-    <script src="data/news-data.js?v=202610231"></script>
+    <script src="data/news-data.js?v=202611051"></script>
+    <script src="data/news-derived.js?v=202611051"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="viz.js?v=202610231"></script>
-    <script src="app.js?v=202610231"></script>
+    <script src="viz.js?v=202611051"></script>
+    <script src="app.js?v=202611051"></script>
   </body>
 </html>
 

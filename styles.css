@@ -587,6 +587,18 @@ input {
   color: #1f2937;
 }
 
+/* 来源链接质量提示：指向官网首页/栏目页时显式标注，避免被误当成单篇新闻页 */
+.source-note {
+  margin-left: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: help;
+}
+
+body.dark .source-note {
+  color: #94a3b8;
+}
+
 a {
   color: var(--accent-2);
   text-decoration: none;

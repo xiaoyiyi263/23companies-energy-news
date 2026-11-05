@@ -1,9 +1,12 @@
-﻿const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {} } = window.ENERGY_NEWS_DATA;
+const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {} } = window.ENERGY_NEWS_DATA;
+
+// 默认展示"数据最后更新日期所在季度"，避免新一季度数据发布后页面仍停留在旧季度
+const latestQuarter = `Q${Math.min(4, Math.max(1, Math.ceil(Number(meta.lastUpdated.slice(5, 7)) / 3)))}`;
 
 const state = {
   company: "all",
   region: "all",
-  quarter: "Q3",
+  quarter: latestQuarter,
   importance: "all",
   search: "",
   view: "company",
@@ -52,8 +55,11 @@ function getCompanyEvents(companyId) {
 }
 
 function getCoverage(companyId) {
-  const quarterEvents = getCompanyEvents(companyId).filter((event) => getQuarter(event.date) === state.quarter || state.quarter === "all");
-  const target = state.quarter === "all" ? meta.quarterlyTarget * 2 : meta.quarterlyTarget;
+  const quarterEvents = getCompanyEvents(companyId).filter(
+    (event) => state.quarter === "all" || getQuarter(event.date) === state.quarter
+  );
+  // 单季度口径：每季目标；全部季度口径：全年目标（4 个季度之和）
+  const target = state.quarter === "all" ? meta.quarterlyTarget * 4 : meta.quarterlyTarget;
   return {
     count: quarterEvents.length,
     target,
@@ -101,6 +107,16 @@ function renderSources(company) {
     .join(" / ");
 }
 
+function renderSourceNote(event) {
+  if (event.linkType === "homepage") {
+    return '<span class="source-note" title="来源链接指向该公司官网首页，不是单篇新闻">（官网首页）</span>';
+  }
+  if (event.linkType === "list") {
+    return '<span class="source-note" title="来源链接指向官网新闻栏目页，不是单篇新闻">（栏目页）</span>';
+  }
+  return "";
+}
+
 function renderEvent(event) {
   const sourceClass = event.sourceType === "官网" ? "official" : "authority";
   const importanceClass = event.importance === "高" ? "imp-high" : event.importance === "低" ? "imp-low" : "imp-mid";
@@ -118,7 +134,7 @@ function renderEvent(event) {
         <div class="event-sections">
           <p><strong>新闻内容：</strong>${escapeHtml(event.details || event.summary)}</p>
         </div>
-        <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
+        <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a>${renderSourceNote(event)}</p>
       </div>
     </article>
   `;
@@ -165,7 +181,7 @@ function renderTimeline(filteredEvents) {
                   <div class="event-sections">
                     <p><strong>新闻内容：</strong>${escapeHtml(event.details || event.summary)}</p>
                   </div>
-                  <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a></p>
+                  <p class="source-line">出处：<a href="${event.url}" target="_blank" rel="noreferrer">${escapeHtml(event.sourceName)}</a>${renderSourceNote(event)}</p>
                 </div>
               </article>
             `;
@@ -323,7 +339,7 @@ function render() {
               </div>
               <div class="coverage">
                 <strong>${coverage.count}/${coverage.target}</strong>
-                <span>当前筛选口径下的季度目标</span>
+                <span>${state.quarter === "all" ? "年度目标（4 个季度）" : "季度目标"}</span>
               </div>
             </header>
             <div class="company-profile" id="profile-${company.id}" hidden>
@@ -346,16 +362,19 @@ function render() {
   }
 
   const officialCount = filteredEvents.filter((event) => event.sourceType === "官网").length;
-  const currentQuarter = state.quarter === "all" ? "Q1" : state.quarter;
+  const gapTarget = state.quarter === "all" ? meta.quarterlyTarget * 4 : meta.quarterlyTarget;
   const totalGap = companies.reduce((sum, company) => {
-    const count = getCompanyEvents(company.id).filter((event) => getQuarter(event.date) === currentQuarter).length;
-    return sum + Math.max(0, meta.quarterlyTarget - count);
+    const count = getCompanyEvents(company.id).filter(
+      (event) => state.quarter === "all" || getQuarter(event.date) === state.quarter
+    ).length;
+    return sum + Math.max(0, gapTarget - count);
   }, 0);
 
   document.querySelector("#event-count").textContent = String(events.length);
   document.querySelector("#company-count").textContent = String(companies.length);
   document.querySelector("#official-ratio").textContent = filteredEvents.length ? `${Math.round((officialCount / filteredEvents.length) * 100)}%` : "0%";
   document.querySelector("#coverage-gap").textContent = String(totalGap);
+  document.querySelector("#gap-label").textContent = state.quarter === "all" ? "本年度缺口" : "本季度缺口";
   document.querySelector("#last-updated").textContent = `最近更新：${meta.lastUpdated}`;
 
   const filterResult = document.querySelector("#filter-result");
