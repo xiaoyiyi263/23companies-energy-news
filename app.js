@@ -3,6 +3,13 @@ const { companies, events, meta, quarterTrends = {}, companyQuarterSummaries = {
 // 默认展示"数据最后更新日期所在季度"，避免新一季度数据发布后页面仍停留在旧季度
 const latestQuarter = `Q${Math.min(4, Math.max(1, Math.ceil(Number(meta.lastUpdated.slice(5, 7)) / 3)))}`;
 
+// “权威来源”口径：官网 + 政府 + 权威媒体 + 交易所披露（行业媒体与一般媒体不计入）
+const AUTHORITATIVE_SOURCE_TYPES = new Set(["官网", "政府", "权威媒体", "交易所披露"]);
+
+function countAuthoritative(events) {
+  return events.filter((event) => AUTHORITATIVE_SOURCE_TYPES.has(event.sourceType)).length;
+}
+
 const state = {
   company: "all",
   region: "all",
@@ -373,6 +380,8 @@ function render() {
   document.querySelector("#event-count").textContent = String(events.length);
   document.querySelector("#company-count").textContent = String(companies.length);
   document.querySelector("#official-ratio").textContent = filteredEvents.length ? `${Math.round((officialCount / filteredEvents.length) * 100)}%` : "0%";
+  const authorityCount = countAuthoritative(filteredEvents);
+  document.querySelector("#authority-ratio").textContent = filteredEvents.length ? `${Math.round((authorityCount / filteredEvents.length) * 100)}%` : "0%";
   document.querySelector("#coverage-gap").textContent = String(totalGap);
   document.querySelector("#gap-label").textContent = state.quarter === "all" ? "本年度缺口" : "本季度缺口";
   document.querySelector("#last-updated").textContent = `最近更新：${meta.lastUpdated}`;

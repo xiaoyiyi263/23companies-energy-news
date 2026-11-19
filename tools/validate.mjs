@@ -340,6 +340,19 @@ if (data && source) {
   } else {
     warn("index.html 未检测到预期的 section 结构，请人工确认标签云与创新可视化分区");
   }
+
+  // ---------- 9. 指标口径元素 ----------
+  const appJs = readFileSync(join(ROOT, "app.js"), "utf8");
+  if (indexHtml.includes('id="official-ratio"') && indexHtml.includes('id="authority-ratio"')) {
+    pass("index.html 包含官网来源占比与权威来源占比两项指标");
+  } else {
+    fail("index.html 缺少官网来源占比或权威来源占比指标元素");
+  }
+  if (appJs.includes("AUTHORITATIVE_SOURCE_TYPES") && appJs.includes("#authority-ratio")) {
+    pass("app.js 权威来源口径实现存在（官网/政府/权威媒体/交易所披露）");
+  } else {
+    fail("app.js 缺少权威来源占比计算逻辑");
+  }
 }
 
 // ---------- 输出 ----------
