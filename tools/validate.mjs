@@ -16,8 +16,8 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 // ---- 基线：每次有意的数据更新后手动同步，防止"悄悄变多/变少" ----
 const BASELINE = {
   companies: 24,
-  events: 465,
-  quarters: { Q1: 124, Q2: 125, Q3: 142, Q4: 74 },
+  events: 507,
+  quarters: { Q1: 124, Q2: 125, Q3: 142, Q4: 116 },
   filteredOutByTopicPattern: 22, // 被 excludedTopicPattern 在运行时过滤的原始行数
   nonArticleLinks: { Q1: 38, Q2: 29, Q3: 0, Q4: 0 }, // 来源链接只到首页/栏目页的事件数
   duplicateUrlGroups: 34, // 被 2 条以上事件共用的 URL 组数
